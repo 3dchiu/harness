@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>加一分行動｜把「待證明」變成看得到進度的微行動</title>
+<title>價值觀 · 加一分行動追蹤｜讓生活慢慢貼近你重視的</title>
 <!--
-  端到端樣板 #3：加一分行動（Loop B 留存鉤子）
-  來源：S 軸專業梳理的「待證明」項（經 localStorage 帶入），亦可獨立新增
-  流程：intro → setup(打分數 + 制定加一分行動) → track(完成+1、進度、累積加分)
-  ※ 內容邏輯待修，本版先把流程跑通。
+  端到端樣板 #3：加一分行動追蹤（價值觀專屬 · Loop B 留存鉤子）
+  來源：價值觀探索（prototype-s-axis-values.html）經 localStorage 帶入 {name,score(1-10),action}
+  流程：intro → setup(確認分數 + 加一分行動) → track(完成+1，往 10 分前進)
+  ※ 決定A：加一分行動為價值觀維度專屬；專業端為「舉證/補強行動」，不走這支。內容邏輯待修。
 -->
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -28,8 +28,8 @@
   p{margin-bottom:12px;color:var(--ink-soft);} p.lead{font-size:17px;color:var(--ink);}
   .badge{display:inline-block;background:var(--accent);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;letter-spacing:2px;margin-bottom:18px;font-weight:600;}
   .hint{font-size:13px;color:var(--muted);margin-top:6px;}
-  input.txt,textarea{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:12px 14px;font-size:14.5px;font-family:inherit;outline:none;transition:border-color .15s;resize:vertical;}
-  input.txt:focus,textarea:focus{border-color:var(--accent);}
+  input.txt{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:12px 14px;font-size:14.5px;font-family:inherit;outline:none;transition:border-color .15s;}
+  input.txt:focus{border-color:var(--accent);}
   .btn{border:none;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s ease;letter-spacing:.5px;}
   .btn-primary{background:var(--accent);color:#fff;} .btn-primary:hover{background:#239493;transform:translateY(-1px);}
   .btn-primary:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;transform:none;}
@@ -39,21 +39,18 @@
   .item{border:1.5px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px;background:#fff;}
   .item .nm{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:10px;}
   .item .nm .rm{float:right;font-size:12px;color:var(--muted);font-weight:500;cursor:pointer;}
-  .scorerow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
-  .scorerow .lab{font-size:13px;color:var(--ink-soft);min-width:88px;}
-  .dot{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--line);background:#fff;cursor:pointer;font-weight:700;color:var(--muted);font-family:inherit;}
-  .dot.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .nums{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+  .nums button{width:32px;height:32px;border:1.5px solid var(--line);background:#fff;border-radius:7px;cursor:pointer;font-weight:700;color:var(--muted);font-family:inherit;font-size:13px;}
+  .nums button.on{background:var(--accent);border-color:var(--accent);color:#fff;}
   .addrow{display:flex;gap:8px;margin-top:8px;}
-  /* track */
   .summary{display:flex;gap:14px;margin-bottom:20px;}
   .stat{flex:1;background:var(--accent-soft);border-radius:12px;padding:16px;text-align:center;}
   .stat .v{font-size:28px;font-weight:800;color:var(--accent);line-height:1;}
   .stat .l{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
   .tbar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0;}
   .tbar .fill{height:100%;background:var(--accent);transition:width .4s;}
-  .act{font-size:14px;color:var(--ink-soft);background:var(--sand);border-radius:8px;padding:8px 12px;margin:8px 0;}
-  .act b{color:#927218;}
-  .done-tag{display:inline-block;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;padding:3px 10px;border-radius:10px;}
+  .act{font-size:14px;color:var(--ink-soft);background:var(--sand);border-radius:8px;padding:8px 12px;margin:8px 0;} .act b{color:#927218;}
+  .scoretag{display:inline-block;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;padding:3px 10px;border-radius:10px;}
   .box{background:var(--accent-soft);border:1px solid rgba(45,179,178,.2);border-radius:12px;padding:18px 22px;margin:22px 0;font-size:14.5px;color:var(--ink-soft);} .box strong{color:var(--ink);}
   .fade-in{animation:fadeIn .35s ease;} @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
   @media(max-width:640px){.wrap{padding:24px 12px 64px;}header.top{flex-direction:column;align-items:flex-start;gap:12px;margin-bottom:24px;}
@@ -64,24 +61,25 @@
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand">生涯設計師 · 加一分行動</div>
+    <div class="brand">生涯設計師 · 價值觀加一分行動</div>
     <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
   </header>
   <div id="screen" class="card fade-in"></div>
 </div>
 
 <script>
-/* item = {name, score(1-5), action, done(計次)} */
+/* item = {name, score(1-10), action, done(計次)} */
 const state={ step:'intro', items:[] };
 const STEPS={intro:15,setup:55,track:100};
 const screen=document.getElementById('screen');
 
-/* 從 S 軸專業梳理帶入「待證明」項 */
+/* 從價值觀探索帶入 {name,score,action} */
 (function seed(){
   try{
-    const raw=localStorage.getItem('growme_prove_items');
+    const raw=localStorage.getItem('growme_value_items');
     if(raw){ const arr=JSON.parse(raw);
-      if(Array.isArray(arr)&&arr.length) state.items=arr.map(n=>({name:String(n),score:1,action:'',done:0})); }
+      if(Array.isArray(arr)&&arr.length) state.items=arr.map(o=>({
+        name:String(o.name||o), score:Number(o.score)||5, action:String(o.action||''), done:0 })); }
   }catch(e){}
 })();
 
@@ -89,56 +87,47 @@ function setProgress(){document.getElementById('progress').style.width=(STEPS[st
 function render(){screen.classList.remove('fade-in');void screen.offsetWidth;screen.classList.add('fade-in');
   setProgress();window.scrollTo({top:0,behavior:'smooth'});
   ({intro:renderIntro,setup:renderSetup,track:renderTrack}[state.step])();}
+function esc(s){return (s||'').replace(/"/g,'&quot;');}
 
 function renderIntro(){
-  const fromS=state.items.length>0;
+  const from=state.items.length>0;
   screen.innerHTML=`
-    <div class="badge">Loop B · 加一分行動</div>
-    <h1>把「待證明」變成<br>每天看得到進度的一步</h1>
-    <p class="lead">盤點出「以為會、但舉不出證據」的專業後，光知道沒用——
-      要把每一項變成<strong>可以加分的具體行動</strong>，一次加一分，慢慢長成硬資產。</p>
-    ${fromS?`<div class="box">✅ 已從你的「專業梳理」帶入 <strong>${state.items.length}</strong> 個待證明項，下一步幫它們各設一個加一分行動。</div>`
-            :`<div class="box">你可以直接在下一步新增要練的項目（或先去做「專業梳理任務」帶入待證明項）。</div>`}
-    <div class="actions"><span></span>
-      <button class="btn btn-primary" onclick="state.step='setup';render()">開始 →</button></div>`;
+    <div class="badge">Loop B · 價值觀加一分行動</div>
+    <h1>不必一次到 10 分，<br>只要每次 ＋1</h1>
+    <p class="lead">把重視卻分數偏低的價值觀，變成一個個「能讓它 +1」的具體行動，
+      讓你的生活慢慢貼近你真正在乎的。</p>
+    ${from?`<div class="box">✅ 已從你的「價值觀探索」帶入 <strong>${state.items.length}</strong> 個價值觀與現況分數，下一步確認分數、設好加一分行動。</div>`
+           :`<div class="box">你可以直接在下一步新增價值觀（或先做「價值觀探索」帶入排序與分數）。</div>`}
+    <div class="actions"><span></span><button class="btn btn-primary" onclick="state.step='setup';render()">開始 →</button></div>`;
 }
 
-/* ---------- setup：打分數 + 加一分行動 ---------- */
 function renderSetup(){
-  const ready = state.items.length>0 && state.items.every(it=>it.action&&it.action.trim());
+  const ready=state.items.length>0 && state.items.every(it=>it.action&&it.action.trim());
   screen.innerHTML=`
-    <div class="eyebrow">STEP 1 · 打分數 + 加一分行動</div>
-    <h2>每一項，現在幾分？下一步做什麼？</h2>
-    <p class="hint">先給現況打分（1=完全舉不出證據，5=已是硬資產），再寫一個能 +1 分的具體行動。</p>
+    <div class="eyebrow">STEP 1 · 確認分數 + 加一分行動</div>
+    <h2>每個價值觀現在幾分？下一步做什麼？</h2>
+    <p class="hint">分數 1–10（1＝幾乎沒被滿足，10＝完全活出來），再寫一個能 +1 的具體行動。</p>
     ${state.items.map((it,i)=>`
       <div class="item">
         <div class="nm">${it.name}<span class="rm" onclick="rm(${i})">移除</span></div>
-        <div class="scorerow"><span class="lab">現在幾分</span>
-          ${[1,2,3,4,5].map(s=>`<button class="dot ${it.score===s?'on':''}" onclick="setScore(${i},${s})">${s}</button>`).join('')}
-        </div>
-        <input class="txt" placeholder="加一分行動：這週能做、且能被看到的一件事" value="${esc(it.action)}"
+        <div class="nums">${[1,2,3,4,5,6,7,8,9,10].map(s=>`<button class="${it.score===s?'on':''}" onclick="setScore(${i},${s})">${s}</button>`).join('')}</div>
+        <input class="txt" placeholder="加一分行動：能讓這個價值觀 +1 的一件事" value="${esc(it.action)}"
           oninput="state.items[${i}].action=this.value; toggleReady()">
       </div>`).join('')}
-    <div class="addrow">
-      <input class="txt" id="newItem" placeholder="再新增一個要練的項目…">
-      <button class="btn btn-primary btn-sm" onclick="addItem()">新增</button>
-    </div>
+    <div class="addrow"><input class="txt" id="newItem" placeholder="再新增一個價值觀…">
+      <button class="btn btn-primary btn-sm" onclick="addItem()">新增</button></div>
     <div class="actions">
       <button class="btn btn-secondary" onclick="state.step='intro';render()">← 返回</button>
       <button class="btn btn-primary" id="toTrack" ${ready?'':'disabled'} onclick="state.step='track';render()">開始追蹤 →</button>
     </div>`;
 }
-function esc(s){return (s||'').replace(/"/g,'&quot;');}
 function setScore(i,s){state.items[i].score=s;render();}
 function rm(i){state.items.splice(i,1);render();}
 function addItem(){const el=document.getElementById('newItem');const v=el.value.trim();
-  if(!v)return; state.items.push({name:v,score:1,action:'',done:0}); render();}
-function toggleReady(){
-  const ready=state.items.length>0 && state.items.every(it=>it.action&&it.action.trim());
-  const b=document.getElementById('toTrack'); if(b) b.disabled=!ready;
-}
+  if(!v)return; state.items.push({name:v,score:5,action:'',done:0}); render();}
+function toggleReady(){const ready=state.items.length>0&&state.items.every(it=>it.action&&it.action.trim());
+  const b=document.getElementById('toTrack'); if(b)b.disabled=!ready;}
 
-/* ---------- track：完成 +1 ---------- */
 function renderTrack(){
   const totalDone=state.items.reduce((a,it)=>a+it.done,0);
   const avg=(state.items.reduce((a,it)=>a+it.score,0)/state.items.length).toFixed(1);
@@ -147,18 +136,17 @@ function renderTrack(){
     <h2>一次加一分</h2>
     <div class="summary">
       <div class="stat"><div class="v">${totalDone}</div><div class="l">累積完成次數</div></div>
-      <div class="stat"><div class="v">${avg}</div><div class="l">平均分數 / 5</div></div>
-      <div class="stat"><div class="v">${state.items.length}</div><div class="l">追蹤中項目</div></div>
+      <div class="stat"><div class="v">${avg}</div><div class="l">平均分數 / 10</div></div>
+      <div class="stat"><div class="v">${state.items.length}</div><div class="l">追蹤中價值觀</div></div>
     </div>
     ${state.items.map((it,i)=>`
       <div class="item">
-        <div class="nm">${it.name}
-          <span class="done-tag" style="float:right;">${it.score} / 5 分</span></div>
-        <div class="tbar"><div class="fill" style="width:${it.score/5*100}%"></div></div>
+        <div class="nm">${it.name}<span class="scoretag" style="float:right;">${it.score} / 10 分</span></div>
+        <div class="tbar"><div class="fill" style="width:${it.score/10*100}%"></div></div>
         <div class="act">＋1 行動：<b>${it.action?esc(it.action):'（尚未設定）'}</b></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <button class="btn btn-primary btn-sm" ${it.score>=5?'disabled':''} onclick="complete(${i})">
-            ${it.score>=5?'已達硬資產 ✓':'完成這件事 ＋1'}</button>
+          <button class="btn btn-primary btn-sm" ${it.score>=10?'disabled':''} onclick="complete(${i})">
+            ${it.score>=10?'已達 10 分 ✓':'完成這件事 ＋1'}</button>
           ${it.done>0?`<span class="hint">已完成 ${it.done} 次</span>`:''}
         </div>
         ${it._next!==undefined?`
@@ -166,25 +154,17 @@ function renderTrack(){
             oninput="state.items[${i}]._next=this.value">
             <button class="btn btn-primary btn-sm" onclick="saveNext(${i})">設定</button></div>`:''}
       </div>`).join('')}
-    <div class="box"><strong>🔄 回補：</strong>每完成一個加一分行動，這項專業就往「硬資產」靠近一步，
-      同時回補你的 S 軸 profile。分數養起來後，回去重評職缺勝率會更準。</div>
+    <div class="box"><strong>🔄 回補：</strong>每完成一個加一分行動，這個價值觀就往「活出來」靠近一步，
+      同時回補你的 S 軸 profile（價值觀維度）。分數養起來，你的自我認知會更穩定。</div>
     <div class="actions">
       <button class="btn btn-secondary" onclick="state.step='setup';render()">← 改設定</button>
-      <a href="prototype-breakthrough-b-jobfit.html" style="text-decoration:none;">
-        <button class="btn btn-primary">回去重評職缺勝率 →</button></a>
+      <a href="prototype-s-axis-values.html" style="text-decoration:none;">
+        <button class="btn btn-primary">回到價值觀儀表板 →</button></a>
     </div>`;
 }
-function complete(i){
-  const it=state.items[i];
-  it.done++; it.score=Math.min(it.score+1,5);
-  if(it.score<5) it._next=''; else delete it._next;   // 達標就不再要求下一步
-  render();
-}
-function saveNext(i){
-  const it=state.items[i];
-  if(it._next&&it._next.trim()){ it.action=it._next.trim(); delete it._next; }
-  render();
-}
+function complete(i){const it=state.items[i]; it.done++; it.score=Math.min(it.score+1,10);
+  if(it.score<10)it._next=''; else delete it._next; render();}
+function saveNext(i){const it=state.items[i]; if(it._next&&it._next.trim()){it.action=it._next.trim();delete it._next;} render();}
 render();
 </script>
 </body>

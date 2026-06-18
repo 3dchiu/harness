@@ -8,8 +8,12 @@
 | 檔案 | 對應節點 |
 |------|---------|
 | `prototype-breakthrough-b-jobfit.html` | 職缺勝率自評（三維13分）＋ 五向分流 ＋ 7天履歷改寫骨架 |
-| `prototype-s-axis-expertise.html` | S 軸專業梳理（兩個篩子 → 三類資產） |
-| `prototype-plus-one-action.html` | 加一分行動（打分數 → +1 → 追蹤） |
+| `prototype-s-axis-expertise.html` | S 軸·專業能力：專業梳理（兩個篩子 → 三類資產）＋ 舉證/補強行動 |
+| `prototype-s-axis-values.html` | S 軸·價值觀：雙重排序（顯/潛意識）→ 落差洞察 → 打分數 |
+| `prototype-plus-one-action.html` | 價值觀·加一分行動追蹤（打分數 1–10 → +1 → 追蹤） |
+
+> S 軸三子維度：① 價值觀（values 原型 → 加一分行動）② 興趣（未建）③ 專業能力（expertise 原型 → 舉證/補強）。
+> 決定 A：「加一分行動」為價值觀專屬；專業端用「舉證/補強行動」，不共用追蹤器。
 
 ## 流程圖
 

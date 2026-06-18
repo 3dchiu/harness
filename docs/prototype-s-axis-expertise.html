@@ -150,11 +150,6 @@ function renderCheck(){
       <button class="btn btn-primary" ${allDone?'':'disabled'} onclick="state.step='result';render()">看我的專業資產 →</button>
     </div>`;
 }
-function goPlusOne(){
-  const prove=state.items.filter(it=>classify(it)==='prove').map(it=>it.name);
-  try{ localStorage.setItem('growme_prove_items', JSON.stringify(prove)); }catch(e){}
-  location.href='prototype-plus-one-action.html';
-}
 function setP(i,v){state.items[i].proof=v;render();}
 function setT(i,v){state.items[i].transfer=v;render();}
 function removeItem(i){state.items.splice(i,1); if(state.items.length<2){state.step='list';} render();}
@@ -201,13 +196,11 @@ function renderResult(){
     </div>
 
     ${prove.length?`
-    <h2 style="font-size:17px;margin-top:26px;">把「待證明」變硬資產：加一分行動</h2>
-    <p class="hint">每一項想一個「這週能做、能被別人看到」的最小成果。</p>
-    ${prove.map(it=>`<div class="plus"><span class="ic">＋1</span>
+    <h2 style="font-size:17px;margin-top:26px;">把「待證明」變硬資產：舉證／補強行動</h2>
+    <p class="hint">每一項想一個「這週能做、能被別人看到」的最小成果（產出證據，而非自評心態）。</p>
+    ${prove.map(it=>`<div class="plus"><span class="ic">＋</span>
       <div><strong>${it.name}</strong>：要讓人相信你會，你需要一個拿得出來的成果——這週的第一步是什麼？</div></div>`).join('')}
-    <div style="text-align:center;margin-top:14px;">
-      <button class="btn btn-primary" onclick="goPlusOne()">把這些變成可追蹤的加一分行動 →</button>
-    </div>
+    <p class="hint" style="margin-top:10px;">（註：此為「舉證/補強行動」，著重產出能力證據；與價值觀維度的「加一分行動」分屬不同維度，不共用追蹤器。）</p>
     `:''}
 
     <div class="box"><strong>🔄 回補與閉環：</strong>
