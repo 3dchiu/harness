@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>決策骨架｜決策校準：用同一套標準，算出你的選擇</title>
+<!--
+  端到端樣板 #5：決策骨架（決策校準）— 服務決策型 A/B/C
+  流程：intro → criteria(定義標準:加分/底線) → weights(權重) → limits(底線門檻) → options(重算選項) → result
+  邏輯來源：決策校準諮詢 4 步（定義標準→權重→現實約束→同一套標準重算）
+  整合：步驟1判斷標準可接價值觀探索(localStorage growme_value_items)當來源。內容邏輯待修。
+  分流(同工具不同重點)：A缺乏標準→重步驟1-2；B風險恐懼→重步驟3底線+風險；C資訊迴避→重步驟4算出來+截止。
+-->
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{--bg:#F8FBFB;--surface:#FFFFFF;--ink:#1F3533;--ink-soft:#4A6361;--muted:#8AA3A1;
+    --line:#E5ECEB;--accent:#2DB3B2;--accent-soft:#E6F7F6;--sand:#FEF6DB;--accent-secondary:#F9D366;--danger:#B5564F;}
+  html,body{font-family:"PingFang TC","Noto Sans TC","Helvetica Neue",Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:760px;margin:0 auto;padding:48px 24px 96px;}
+  header.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;}
+  .brand{font-size:14px;letter-spacing:2px;color:var(--accent);font-weight:700;text-transform:uppercase;}
+  .progress-track{flex:1;max-width:320px;margin-left:24px;height:4px;background:var(--line);border-radius:2px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--accent);width:0%;transition:width .5s cubic-bezier(.2,.8,.2,1);}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:40px 36px;box-shadow:0 4px 20px rgba(39,177,176,.05);}
+  .eyebrow{font-size:12px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:16px;font-weight:700;}
+  h1{font-size:27px;line-height:1.35;font-weight:700;margin-bottom:18px;letter-spacing:-.5px;}
+  h2{font-size:20px;font-weight:600;margin-bottom:10px;}
+  p{margin-bottom:12px;color:var(--ink-soft);} p.lead{font-size:17px;color:var(--ink);}
+  .badge{display:inline-block;background:var(--accent);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;letter-spacing:2px;margin-bottom:18px;font-weight:600;}
+  .hint{font-size:13px;color:var(--muted);margin-top:6px;}
+  input.txt{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:11px 14px;font-size:14.5px;font-family:inherit;outline:none;}
+  input.txt:focus{border-color:var(--accent);}
+  input.num{width:74px;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;text-align:right;}
+  input.num:focus{border-color:var(--accent);}
+  .btn{border:none;padding:13px 26px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s ease;}
+  .btn-primary{background:var(--accent);color:#fff;} .btn-primary:hover{background:#239493;transform:translateY(-1px);}
+  .btn-primary:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;transform:none;}
+  .btn-secondary{background:transparent;color:var(--muted);padding:13px 0;} .btn-secondary:hover{color:var(--accent);}
+  .btn-sm{padding:7px 14px;font-size:13px;border-radius:8px;}
+  .actions{display:flex;justify-content:space-between;align-items:center;margin-top:30px;gap:12px;}
+  .chip{display:inline-block;border:1.5px solid var(--line);border-radius:18px;padding:8px 15px;margin:5px 6px 0 0;font-size:14px;cursor:pointer;background:#fff;user-select:none;}
+  .chip.sel{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600;}
+  .row{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px;background:#fff;}
+  .row .nm{flex:1;font-size:15px;font-weight:600;}
+  .row .rm{font-size:12px;color:var(--muted);cursor:pointer;}
+  .seg{display:flex;border:1.5px solid var(--line);border-radius:8px;overflow:hidden;}
+  .seg button{border:none;background:#fff;padding:7px 12px;font-size:12.5px;cursor:pointer;color:var(--muted);font-family:inherit;font-weight:600;}
+  .seg button.on-score{background:var(--accent);color:#fff;} .seg button.on-limit{background:var(--accent-secondary);color:#5a4a10;}
+  .addrow{display:flex;gap:8px;margin-top:12px;}
+  .sumbar{display:flex;justify-content:space-between;align-items:center;background:var(--bg);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:14px;font-weight:700;}
+  .sumbar.ok{color:var(--accent);} .sumbar.bad{color:var(--danger);}
+  .opt{border:1.5px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px;background:#fff;}
+  .opt .on{font-size:16px;font-weight:700;margin-bottom:10px;} .opt .on .rm{float:right;font-size:12px;color:var(--muted);cursor:pointer;font-weight:500;}
+  .crit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:14px;}
+  .crit .cl{min-width:120px;color:var(--ink-soft);}
+  .nums{display:flex;gap:4px;} .nums button{width:30px;height:30px;border:1.5px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;font-weight:700;color:var(--muted);font-family:inherit;font-size:13px;}
+  .nums button.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .pf button{font-size:12.5px;padding:6px 12px;border:1.5px solid var(--line);background:#fff;border-radius:14px;cursor:pointer;color:var(--muted);font-weight:600;font-family:inherit;}
+  .pf button.on-pass{background:var(--accent);border-color:var(--accent);color:#fff;} .pf button.on-fail{background:#F4DEDE;border-color:#E9C4C4;color:var(--danger);}
+  .res{border:1.5px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px;background:#fff;}
+  .res.win{border-color:var(--accent);background:var(--accent-soft);} .res.out{border-color:#E9C4C4;background:#Fbf3f2;}
+  .res .rt{display:flex;justify-content:space-between;align-items:baseline;} .res .rn{font-size:16px;font-weight:700;} .res .rs{font-size:22px;font-weight:800;color:var(--accent);}
+  .res.out .rs{color:var(--danger);}
+  .tag{display:inline-block;font-size:11px;padding:2px 9px;border-radius:10px;font-weight:600;margin-left:6px;}
+  .tag-win{background:var(--accent);color:#fff;} .tag-out{background:#F4DEDE;color:var(--danger);} .tag-ok{background:var(--sand);color:#927218;}
+  .tbar{height:7px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0;} .tbar .fill{height:100%;background:var(--accent);}
+  .res.out .fill{background:var(--danger);}
+  .box{background:var(--accent-soft);border:1px solid rgba(45,179,178,.2);border-radius:12px;padding:18px 22px;margin:20px 0;font-size:14.5px;color:var(--ink-soft);} .box strong{color:var(--ink);}
+  .fade-in{animation:fadeIn .35s ease;} @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  @media(max-width:640px){.wrap{padding:24px 12px 64px;}header.top{flex-direction:column;align-items:flex-start;gap:12px;margin-bottom:24px;}
+    .progress-track{margin-left:0;max-width:100%;width:100%;}.card{padding:24px 16px;border-radius:12px;}h1{font-size:21px;}
+    .actions{flex-direction:column-reverse;gap:10px;}.actions .btn{width:100%;text-align:center;}.crit .cl{min-width:100%;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">生涯設計師 · 決策骨架</div>
+    <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+  </header>
+  <div id="screen" class="card fade-in"></div>
+</div>
+
+<script>
+const SEED=['成長','薪資','自由度','穩定','影響力','工作內容','團隊氛圍','發展性','通勤','彈性','聲望','學習機會'];
+const state={ step:'intro', pool:[...SEED], criteria:[], options:[] };
+// criteria item: {name, type:'score'|'limit', weight:0, limit:''}
+// option item: {name, scores:{name:1-5}, pass:{name:true}}
+const STEPS={intro:8,criteria:28,weights:46,limits:60,options:82,result:100};
+const screen=document.getElementById('screen');
+
+/* 接價值觀探索的排序結果當候選標準 */
+(function seed(){
+  try{
+    const raw=localStorage.getItem('growme_value_items');
+    if(raw){ const arr=JSON.parse(raw);
+      if(Array.isArray(arr)) arr.forEach(o=>{ const n=String(o.name||o); if(n&&!state.pool.includes(n)) state.pool.unshift(n); }); }
+  }catch(e){}
+})();
+
+function setProgress(){document.getElementById('progress').style.width=(STEPS[state.step]||0)+'%';}
+function render(){screen.classList.remove('fade-in');void screen.offsetWidth;screen.classList.add('fade-in');
+  setProgress();window.scrollTo({top:0,behavior:'smooth'});
+  ({intro:renderIntro,criteria:renderCriteria,weights:renderWeights,limits:renderLimits,options:renderOptions,result:renderResult}[state.step])();}
+function esc(s){return(s||'').replace(/"/g,'&quot;');}
+function scoreCrit(){return state.criteria.filter(c=>c.type==='score');}
+function limitCrit(){return state.criteria.filter(c=>c.type==='limit');}
+function weightSum(){return scoreCrit().reduce((a,c)=>a+(Number(c.weight)||0),0);}
+
+function renderIntro(){
+  screen.innerHTML=`
+    <div class="badge">決策型 · 決策校準</div>
+    <h1>不靠感覺，<br>用同一套標準算出你的選擇</h1>
+    <p class="lead">選不出來，往往不是選項問題，是<strong>沒有判斷標準</strong>。這個工具帶你建立自己的決策架構：
+      定義標準 → 設權重 → 設底線 → 用同一套標準重算所有選項。</p>
+    <div class="box">完成後你會得到：<br>✔ 一套<strong>可重複使用</strong>的決策架構　✔ 算得出來的<strong>選擇結果</strong>（不是建議）　✔ 知道為什麼的<strong>決策信心</strong></div>
+    <div class="actions"><span></span><button class="btn btn-primary" onclick="state.step='criteria';render()">開始 →</button></div>`;
+}
+
+/* Step 1 定義標準 */
+function renderCriteria(){
+  const ok=scoreCrit().length>=2;
+  screen.innerHTML=`
+    <div class="eyebrow">STEP 1 · 定義你的判斷標準</div>
+    <h2>你真正重視的是什麼？</h2>
+    <p class="hint">點選你在乎的標準，再把每一個分成「加分項（可評分）」或「底線（不能違反）」。</p>
+    <div>${state.pool.map(v=>`<span class="chip ${state.criteria.find(c=>c.name===v)?'sel':''}" onclick="toggleCrit('${esc(v)}')">${v}</span>`).join('')}</div>
+    <div class="addrow"><input class="txt" id="newc" placeholder="新增自己的標準…"><button class="btn btn-primary btn-sm" onclick="addCrit()">新增</button></div>
+    ${state.criteria.length?`<div style="margin-top:18px;">${state.criteria.map((c,i)=>`
+      <div class="row"><span class="nm">${c.name}</span>
+        <div class="seg">
+          <button class="${c.type==='score'?'on-score':''}" onclick="setType(${i},'score')">加分項</button>
+          <button class="${c.type==='limit'?'on-limit':''}" onclick="setType(${i},'limit')">底線</button>
+        </div>
+        <span class="rm" onclick="rmCrit(${i})">移除</span>
+      </div>`).join('')}</div>`:''}
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="state.step='intro';render()">← 返回</button>
+      <button class="btn btn-primary" ${ok?'':'disabled'} onclick="goWeights()">下一步：設權重 →</button>
+    </div>`;
+}
+function toggleCrit(v){const i=state.criteria.findIndex(c=>c.name===v);
+  if(i>=0)state.criteria.splice(i,1); else state.criteria.push({name:v,type:'score',weight:0,limit:''}); render();}
+function addCrit(){const el=document.getElementById('newc');const v=el.value.trim();
+  if(!v)return; if(!state.pool.includes(v))state.pool.push(v); if(!state.criteria.find(c=>c.name===v))state.criteria.push({name:v,type:'score',weight:0,limit:''}); render();}
+function setType(i,t){state.criteria[i].type=t;render();}
+function rmCrit(i){state.criteria.splice(i,1);render();}
+function goWeights(){
+  // 平均預填權重
+  const sc=scoreCrit(); const each=Math.floor(100/sc.length);
+  sc.forEach((c,idx)=>c.weight=idx===sc.length-1?100-each*(sc.length-1):each);
+  state.step='weights'; render();
+}
+
+/* Step 2 權重 */
+function renderWeights(){
+  const sum=weightSum(); const ok=sum===100;
+  screen.innerHTML=`
+    <div class="eyebrow">STEP 2 · 建立你的權重</div>
+    <h2>哪個更重要？（總和需＝100%）</h2>
+    <p class="hint">沒有標準答案，這是「你的選擇方式」。例如 自由 60／薪資 20／穩定 20。</p>
+    ${scoreCrit().map((c)=>{const i=state.criteria.indexOf(c);
+      return `<div class="row"><span class="nm">${c.name}</span>
+        <input class="num" type="number" min="0" max="100" value="${c.weight}" oninput="setW(${i},this.value)"> <span style="color:var(--muted)">%</span></div>`;}).join('')}
+    <div class="sumbar ${ok?'ok':'bad'}"><span>目前總和</span><span>${sum}% ${ok?'✓':'（需＝100）'}</span></div>
+    <div style="margin-top:8px;"><button class="btn btn-secondary btn-sm" onclick="evenW()">平均分配</button></div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="state.step='criteria';render()">← 改標準</button>
+      <button class="btn btn-primary" ${ok?'':'disabled'} onclick="goLimits()">下一步：設底線 →</button>
+    </div>`;
+}
+function setW(i,v){state.criteria[i].weight=Math.max(0,Math.min(100,Number(v)||0));
+  const sb=document.querySelector('.sumbar'); if(sb){const s=weightSum();sb.className='sumbar '+(s===100?'ok':'bad');sb.querySelector('span:last-child').textContent=s+'% '+(s===100?'✓':'（需＝100）');}
+  const b=document.querySelector('.actions .btn-primary'); if(b)b.disabled=weightSum()!==100;}
+function evenW(){const sc=scoreCrit();const each=Math.floor(100/sc.length);
+  sc.forEach((c,idx)=>c.weight=idx===sc.length-1?100-each*(sc.length-1):each);render();}
+function goLimits(){ if(limitCrit().length===0){ state.step='options'; } else { state.step='limits'; } render(); }
+
+/* Step 3 底線 */
+function renderLimits(){
+  screen.innerHTML=`
+    <div class="eyebrow">STEP 3 · 設定現實約束（底線）</div>
+    <h2>哪些是「不能違反」的條件？</h2>
+    <p class="hint">這不是偏好，是硬條件。寫下門檻，稍後每個選項會逐一檢查是否符合。</p>
+    ${limitCrit().map((c)=>{const i=state.criteria.indexOf(c);
+      return `<div class="row"><span class="nm">${c.name}</span>
+        <input class="txt" style="flex:1" placeholder="門檻，例：≥ 5 萬 / ≤ 1 小時 / 不接受週末" value="${esc(c.limit)}" oninput="state.criteria[${i}].limit=this.value"></div>`;}).join('')}
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="state.step='weights';render()">← 改權重</button>
+      <button class="btn btn-primary" onclick="state.step='options';render()">下一步：放入選項 →</button>
+    </div>`;
+}
+
+/* Step 4 選項重算 */
+function renderOptions(){
+  const ready=state.options.length>=2 && state.options.every(o=>scoreCrit().every(c=>o.scores[c.name]));
+  screen.innerHTML=`
+    <div class="eyebrow">STEP 4 · 用同一套標準重算所有選項</div>
+    <h2>放入你正在猶豫的選項</h2>
+    <p class="hint">每個選項對各「加分項」評 1–5 分；對各「底線」勾符合/不符合。</p>
+    <div class="addrow"><input class="txt" id="newo" placeholder="選項名稱，例：A 公司 offer"><button class="btn btn-primary btn-sm" onclick="addOpt()">新增選項</button></div>
+    <div style="margin-top:14px;">
+    ${state.options.map((o,oi)=>`
+      <div class="opt">
+        <div class="on">${o.name}<span class="rm" onclick="rmOpt(${oi})">移除</span></div>
+        ${scoreCrit().map(c=>`<div class="crit"><span class="cl">${c.name}（${c.weight}%）</span>
+          <div class="nums">${[1,2,3,4,5].map(s=>`<button class="${o.scores[c.name]===s?'on':''}" onclick="setScore(${oi},'${esc(c.name)}',${s})">${s}</button>`).join('')}</div></div>`).join('')}
+        ${limitCrit().map(c=>`<div class="crit"><span class="cl">底線·${c.name}</span>
+          <div class="pf">
+            <button class="${o.pass[c.name]!==false?'on-pass':''}" onclick="setPass(${oi},'${esc(c.name)}',true)">符合</button>
+            <button class="${o.pass[c.name]===false?'on-fail':''}" onclick="setPass(${oi},'${esc(c.name)}',false)">不符合</button>
+          </div></div>`).join('')}
+      </div>`).join('')}
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="state.step=(limitCrit().length?'limits':'weights');render()">← 返回</button>
+      <button class="btn btn-primary" ${ready?'':'disabled'} onclick="state.step='result';render()">算出結果 →</button>
+    </div>`;
+}
+function addOpt(){const el=document.getElementById('newo');const v=el.value.trim();
+  if(!v)return; if(state.options.length>=5)return; state.options.push({name:v,scores:{},pass:{}}); render();}
+function rmOpt(i){state.options.splice(i,1);render();}
+function setScore(oi,c,s){state.options[oi].scores[c]=s;render();}
+function setPass(oi,c,v){state.options[oi].pass[c]=v;render();}
+
+/* 結果 */
+function optScore(o){ return scoreCrit().reduce((a,c)=>a+((o.scores[c.name]||0)/5)*(Number(c.weight)||0),0); }
+function optFails(o){ return limitCrit().filter(c=>o.pass[c.name]===false).map(c=>c.name); }
+function renderResult(){
+  const ranked=state.options.map(o=>({o,score:optScore(o),fails:optFails(o)}))
+    .sort((a,b)=>(a.fails.length-b.fails.length)||(b.score-a.score));
+  const winner=ranked.find(r=>r.fails.length===0);
+  screen.innerHTML=`
+    <div class="eyebrow">結果 · 你自己算出來的</div>
+    <h2>用同一套標準，結果是：</h2>
+    ${ranked.map((r,idx)=>{
+      const out=r.fails.length>0; const isWin=winner&&r.o===winner.o;
+      const tag=out?`<span class="tag tag-out">違反底線·風險過高</span>`:(isWin?`<span class="tag tag-win">最符合你的標準</span>`:`<span class="tag tag-ok">可考慮</span>`);
+      return `<div class="res ${out?'out':(isWin?'win':'')}">
+        <div class="rt"><span class="rn">${idx+1}. ${r.o.name}${tag}</span><span class="rs">${Math.round(r.score)}<span style="font-size:13px;color:var(--muted)">/100</span></span></div>
+        <div class="tbar"><div class="fill" style="width:${Math.round(r.score)}%"></div></div>
+        ${out?`<div class="hint" style="color:var(--danger)">未通過底線：${r.fails.join('、')}——分數再高也是「看起來很好」，不是真的適合。</div>`:''}
+      </div>`;}).join('')}
+    <div class="box">
+      <strong>怎麼讀：</strong>通過底線、加權分數最高者＝<strong>真的符合你現在狀態</strong>；
+      違反底線者＝「看起來很好但風險過高」，已標示；分數相近時，差異就在你給的權重。<br><br>
+      ✔ 你已建立<strong>一套可重複使用的決策架構</strong>（標準＋權重＋底線）<br>
+      ✔ 這是<strong>你自己算出來的結論</strong>，不是別人的建議<br>
+      ✔ 下次面對新選擇，套用同一套即可——這就是<strong>決策信心</strong>的來源
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="state.step='options';render()">← 改選項</button>
+      <button class="btn btn-primary" onclick="state.step='criteria';render()">調整標準重算 ↻</button>
+    </div>`;
+}
+render();
+</script>
+</body>
+</html>
