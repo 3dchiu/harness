@@ -162,13 +162,33 @@ function computeSort2(){
 }
 
 /* ---- insight 落差 ---- */
+function consistencyPct(){
+  const n=state.sort2.length; let sum=0;
+  state.sort2.forEach((v,i)=>{ sum+=Math.abs(i-state.sort1.indexOf(v)); });
+  const maxSum=Math.floor(n*n/2)||1;
+  return Math.round((1-sum/maxSum)*100);
+}
+function coreState(){
+  const t1=state.sort1.slice(0,3), t2=state.sort2.slice(0,3);
+  const sameSet=t1.every(v=>t2.includes(v));
+  const sameOrder=sameSet&&t1.every((v,i)=>v===t2[i]);
+  if(sameOrder) return {t:'核心穩定',d:'前三項完全沒變——你有穩定的核心價值，遇重大變動時通常能守住底線。'};
+  if(sameSet)   return {t:'核心明確但易搖擺',d:'前三項相同、順序調換——你有具體核心價值、自我掌控度高，但遇重大變動時容易搖擺。'};
+  return {t:'核心待釐清',d:'前三項換了人——核心價值尚未釐清，容易受普世價值觀與他人影響，需要時間釐清。'};
+}
 function renderInsight(){
   const movers=state.sort2.map((v,i)=>({v,s2:i,s1:state.sort1.indexOf(v),d:state.sort1.indexOf(v)-i}));
   const risers=movers.filter(m=>m.d>=2).sort((a,b)=>b.d-a.d);
   const fallers=movers.filter(m=>m.d<=-2).sort((a,b)=>a.d-b.d);
+  const c=consistencyPct(); const cs=coreState();
+  const cLevel=c>=70?'高':(c>=40?'中':'低');
+  const cMsg=c>=70?'內在與外在差異小，追求一致性高——你清楚什麼對自己更重要。'
+            :(c>=40?'內在與外在有些落差，部分價值你對外呈現與真正需要不太一致。'
+                   :'內在與外在差異大，狀態可能較混亂、易茫然——但你正好藉此看見了內在需求。');
   screen.innerHTML=`
     <div class="eyebrow">STEP 4 · 落差洞察</div>
     <h2>你「以為」的 vs 你「真正」的</h2>
+    <p class="hint">第一次＝意識（理性安排）；第二次＝潛意識（內在需求／本能反應）。</p>
     <div class="two">
       <div class="col"><h3>顯意識（對外呈現）</h3>
         ${state.sort1.map((v,i)=>`<div class="vrow"><span class="i">${i+1}</span>${v}</div>`).join('')}</div>
@@ -176,10 +196,14 @@ function renderInsight(){
         ${state.sort2.map((v,i)=>{const d=state.sort1.indexOf(v)-i;
           return `<div class="vrow"><span class="i">${i+1}</span>${v} ${d>=2?'<span class="up">▲'+d+'</span>':(d<=-2?'<span class="down">▼'+(-d)+'</span>':'')}</div>`;}).join('')}</div>
     </div>
+    <div class="box"><strong>一致性指數：${c}%（${cLevel}）</strong><br>${cMsg}</div>
+    <div class="box" style="background:var(--sand);border-color:rgba(249,211,102,.4);">
+      <strong>核心價值狀態：${cs.t}</strong><br>${cs.d}
+    </div>
     <div class="box">
-      ${risers.length?`<strong>浮上來的內在真需求：</strong>${risers.map(m=>m.v).join('、')}——這些你嘴上未必先講，卻是更深層的需要。<br>`:''}
-      ${fallers.length?`<strong>對外呈現、但沒那麼核心：</strong>${fallers.map(m=>m.v).join('、')}——容易擺在前面，未必是真需求。<br>`:''}
-      ${!risers.length&&!fallers.length?'你的兩次排序相當一致——顯意識與內在需求對齊。':''}
+      ${risers.length?`<strong>浮上來的內在真需求：</strong>${risers.map(m=>m.v).join('、')}——你嘴上未必先講，卻是更深層的需要。<br>`:''}
+      ${fallers.length?`<strong>對外呈現、但沒那麼核心：</strong>${fallers.map(m=>m.v).join('、')}——容易擺在前面，未必是真需求。`:''}
+      ${!risers.length&&!fallers.length?'各項位移不大，顯意識與內在需求大致對齊。':''}
     </div>
     <div class="actions">
       <button class="btn btn-secondary" onclick="goSort2()">← 重做比較</button>
@@ -202,6 +226,7 @@ function renderAction(){
         <input class="txt" placeholder="加一分行動：要從 ${state.scores[v]||'?'} 分到 ${(state.scores[v]||0)+1} 分，你要做的一件事"
           value="${esc(state.actions[v]||'')}" oninput="state.actions['${v}']=this.value">
       </div>`).join('')}
+    ${confidenceBox()}
     <div class="box"><strong>🧭 價值觀儀表板：</strong>未來遇到工作選擇，逐項問「這個選擇讓它加分還是扣分」，
       用你的價值觀（而非薪資/名氣）做判斷。（此儀表板也是「決策型·缺乏標準」卡點的解法。）</div>
     <div class="actions">
@@ -211,6 +236,21 @@ function renderAction(){
 }
 function setScore(v,s){state.scores[v]=s;render();}
 function allScored(){return state.sort2.every(v=>state.scores[v]);}
+function confidenceBox(){
+  if(!allScored()) return '';
+  const vals=state.sort2;
+  const avg=vals.reduce((a,v)=>a+(state.scores[v]||0),0)/vals.length;
+  const core=vals.slice(0,3);
+  const lowCore=core.filter(v=>(state.scores[v]||0)<=4);
+  const lowAvg=avg<5;
+  if(!lowAvg && !lowCore.length)
+    return `<div class="box"><strong>信心狀態：穩定</strong>（平均 ${avg.toFixed(1)} 分）。核心價值分數尚可，目前較無明顯卡點訊號。</div>`;
+  let msg='<strong>信心狀態：可能階段性卡住</strong><br>';
+  if(lowAvg) msg+=`・平均分數偏低（${avg.toFixed(1)}）——整體生活對價值的滿足度不足。<br>`;
+  if(lowCore.length) msg+=`・核心價值偏低：${lowCore.join('、')}——最重要的卻分數低，常是卡住的來源。<br>`;
+  msg+='這些正是優先用「加一分行動」修復的對象。';
+  return `<div class="box" style="background:#F7E9E9;border-color:rgba(181,86,79,.3);">${msg}</div>`;
+}
 function goTracker(){
   const items=state.sort2.map(v=>({name:v,score:state.scores[v]||5,action:state.actions[v]||''}));
   try{ localStorage.setItem('growme_value_items', JSON.stringify(items)); }catch(e){}
