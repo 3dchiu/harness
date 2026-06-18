@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>加一分行動｜把「待證明」變成看得到進度的微行動</title>
+<!--
+  端到端樣板 #3：加一分行動（Loop B 留存鉤子）
+  來源：S 軸專業梳理的「待證明」項（經 localStorage 帶入），亦可獨立新增
+  流程：intro → setup(打分數 + 制定加一分行動) → track(完成+1、進度、累積加分)
+  ※ 內容邏輯待修，本版先把流程跑通。
+-->
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{--bg:#F8FBFB;--surface:#FFFFFF;--ink:#1F3533;--ink-soft:#4A6361;--muted:#8AA3A1;
+    --line:#E5ECEB;--accent:#2DB3B2;--accent-soft:#E6F7F6;--sand:#FEF6DB;--accent-secondary:#F9D366;}
+  html,body{font-family:"PingFang TC","Noto Sans TC","Helvetica Neue",Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:720px;margin:0 auto;padding:48px 24px 96px;}
+  header.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;}
+  .brand{font-size:14px;letter-spacing:2px;color:var(--accent);font-weight:700;text-transform:uppercase;}
+  .progress-track{flex:1;max-width:320px;margin-left:24px;height:4px;background:var(--line);border-radius:2px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--accent);width:0%;transition:width .5s cubic-bezier(.2,.8,.2,1);}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:40px 36px;box-shadow:0 4px 20px rgba(39,177,176,.05);}
+  .eyebrow{font-size:12px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:16px;font-weight:700;}
+  h1{font-size:28px;line-height:1.35;font-weight:700;margin-bottom:18px;letter-spacing:-.5px;}
+  h2{font-size:20px;font-weight:600;margin-bottom:12px;}
+  p{margin-bottom:12px;color:var(--ink-soft);} p.lead{font-size:17px;color:var(--ink);}
+  .badge{display:inline-block;background:var(--accent);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;letter-spacing:2px;margin-bottom:18px;font-weight:600;}
+  .hint{font-size:13px;color:var(--muted);margin-top:6px;}
+  input.txt,textarea{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:12px 14px;font-size:14.5px;font-family:inherit;outline:none;transition:border-color .15s;resize:vertical;}
+  input.txt:focus,textarea:focus{border-color:var(--accent);}
+  .btn{border:none;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s ease;letter-spacing:.5px;}
+  .btn-primary{background:var(--accent);color:#fff;} .btn-primary:hover{background:#239493;transform:translateY(-1px);}
+  .btn-primary:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;transform:none;}
+  .btn-secondary{background:transparent;color:var(--muted);padding:14px 0;} .btn-secondary:hover{color:var(--accent);}
+  .btn-sm{padding:8px 16px;font-size:13.5px;border-radius:8px;}
+  .actions{display:flex;justify-content:space-between;align-items:center;margin-top:32px;}
+  .item{border:1.5px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px;background:#fff;}
+  .item .nm{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+  .item .nm .rm{float:right;font-size:12px;color:var(--muted);font-weight:500;cursor:pointer;}
+  .scorerow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .scorerow .lab{font-size:13px;color:var(--ink-soft);min-width:88px;}
+  .dot{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--line);background:#fff;cursor:pointer;font-weight:700;color:var(--muted);font-family:inherit;}
+  .dot.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .addrow{display:flex;gap:8px;margin-top:8px;}
+  /* track */
+  .summary{display:flex;gap:14px;margin-bottom:20px;}
+  .stat{flex:1;background:var(--accent-soft);border-radius:12px;padding:16px;text-align:center;}
+  .stat .v{font-size:28px;font-weight:800;color:var(--accent);line-height:1;}
+  .stat .l{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
+  .tbar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0;}
+  .tbar .fill{height:100%;background:var(--accent);transition:width .4s;}
+  .act{font-size:14px;color:var(--ink-soft);background:var(--sand);border-radius:8px;padding:8px 12px;margin:8px 0;}
+  .act b{color:#927218;}
+  .done-tag{display:inline-block;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;padding:3px 10px;border-radius:10px;}
+  .box{background:var(--accent-soft);border:1px solid rgba(45,179,178,.2);border-radius:12px;padding:18px 22px;margin:22px 0;font-size:14.5px;color:var(--ink-soft);} .box strong{color:var(--ink);}
+  .fade-in{animation:fadeIn .35s ease;} @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  @media(max-width:640px){.wrap{padding:24px 12px 64px;}header.top{flex-direction:column;align-items:flex-start;gap:12px;margin-bottom:24px;}
+    .progress-track{margin-left:0;max-width:100%;width:100%;}.card{padding:24px 16px;border-radius:12px;}h1{font-size:22px;}
+    .actions{flex-direction:column-reverse;gap:12px;}.actions .btn{width:100%;text-align:center;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">生涯設計師 · 加一分行動</div>
+    <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+  </header>
+  <div id="screen" class="card fade-in"></div>
+</div>
+
+<script>
+/* item = {name, score(1-5), action, done(計次)} */
+const state={ step:'intro', items:[] };
+const STEPS={intro:15,setup:55,track:100};
+const screen=document.getElementById('screen');
+
+/* 從 S 軸專業梳理帶入「待證明」項 */
+(function seed(){
+  try{
+    const raw=localStorage.getItem('growme_prove_items');
+    if(raw){ const arr=JSON.parse(raw);
+      if(Array.isArray(arr)&&arr.length) state.items=arr.map(n=>({name:String(n),score:1,action:'',done:0})); }
+  }catch(e){}
+})();
+
+function setProgress(){document.getElementById('progress').style.width=(STEPS[state.step]||0)+'%';}
+function render(){screen.classList.remove('fade-in');void screen.offsetWidth;screen.classList.add('fade-in');
+  setProgress();window.scrollTo({top:0,behavior:'smooth'});
+  ({intro:renderIntro,setup:renderSetup,track:renderTrack}[state.step])();}
+
+function renderIntro(){
+  const fromS=state.items.length>0;
+  screen.innerHTML=`
+    <div class="badge">Loop B · 加一分行動</div>
+    <h1>把「待證明」變成<br>每天看得到進度的一步</h1>
+    <p class="lead">盤點出「以為會、但舉不出證據」的專業後，光知道沒用——
+      要把每一項變成<strong>可以加分的具體行動</strong>，一次加一分，慢慢長成硬資產。</p>
+    ${fromS?`<div class="box">✅ 已從你的「專業梳理」帶入 <strong>${state.items.length}</strong> 個待證明項，下一步幫它們各設一個加一分行動。</div>`
+            :`<div class="box">你可以直接在下一步新增要練的項目（或先去做「專業梳理任務」帶入待證明項）。</div>`}
+    <div class="actions"><span></span>
+      <button class="btn btn-primary" onclick="state.step='setup';render()">開始 →</button></div>`;
+}
+
+/* ---------- setup：打分數 + 加一分行動 ---------- */
+function renderSetup(){
+  const ready = state.items.length>0 && state.items.every(it=>it.action&&it.action.trim());
+  screen.innerHTML=`
+    <div class="eyebrow">STEP 1 · 打分數 + 加一分行動</div>
+    <h2>每一項，現在幾分？下一步做什麼？</h2>
+    <p class="hint">先給現況打分（1=完全舉不出證據，5=已是硬資產），再寫一個能 +1 分的具體行動。</p>
+    ${state.items.map((it,i)=>`
+      <div class="item">
+        <div class="nm">${it.name}<span class="rm" onclick="rm(${i})">移除</span></div>
+        <div class="scorerow"><span class="lab">現在幾分</span>
+          ${[1,2,3,4,5].map(s=>`<button class="dot ${it.score===s?'on':''}" onclick="setScore(${i},${s})">${s}</button>`).join('')}
+        </div>
+        <input class="txt" placeholder="加一分行動：這週能做、且能被看到的一件事" value="${esc(it.action)}"
+          oninput="state.items[${i}].action=this.value; toggleReady()">
+      </div>`).join('')}
+    <div class="addrow">
+      <input class="txt" id="newItem" placeholder="再新增一個要練的項目…">
+      <button class="btn btn-primary btn-sm" onclick="addItem()">新增</button>
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="state.step='intro';render()">← 返回</button>
+      <button class="btn btn-primary" id="toTrack" ${ready?'':'disabled'} onclick="state.step='track';render()">開始追蹤 →</button>
+    </div>`;
+}
+function esc(s){return (s||'').replace(/"/g,'&quot;');}
+function setScore(i,s){state.items[i].score=s;render();}
+function rm(i){state.items.splice(i,1);render();}
+function addItem(){const el=document.getElementById('newItem');const v=el.value.trim();
+  if(!v)return; state.items.push({name:v,score:1,action:'',done:0}); render();}
+function toggleReady(){
+  const ready=state.items.length>0 && state.items.every(it=>it.action&&it.action.trim());
+  const b=document.getElementById('toTrack'); if(b) b.disabled=!ready;
+}
+
+/* ---------- track：完成 +1 ---------- */
+function renderTrack(){
+  const totalDone=state.items.reduce((a,it)=>a+it.done,0);
+  const avg=(state.items.reduce((a,it)=>a+it.score,0)/state.items.length).toFixed(1);
+  screen.innerHTML=`
+    <div class="eyebrow">STEP 2 · 追蹤</div>
+    <h2>一次加一分</h2>
+    <div class="summary">
+      <div class="stat"><div class="v">${totalDone}</div><div class="l">累積完成次數</div></div>
+      <div class="stat"><div class="v">${avg}</div><div class="l">平均分數 / 5</div></div>
+      <div class="stat"><div class="v">${state.items.length}</div><div class="l">追蹤中項目</div></div>
+    </div>
+    ${state.items.map((it,i)=>`
+      <div class="item">
+        <div class="nm">${it.name}
+          <span class="done-tag" style="float:right;">${it.score} / 5 分</span></div>
+        <div class="tbar"><div class="fill" style="width:${it.score/5*100}%"></div></div>
+        <div class="act">＋1 行動：<b>${it.action?esc(it.action):'（尚未設定）'}</b></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" ${it.score>=5?'disabled':''} onclick="complete(${i})">
+            ${it.score>=5?'已達硬資產 ✓':'完成這件事 ＋1'}</button>
+          ${it.done>0?`<span class="hint">已完成 ${it.done} 次</span>`:''}
+        </div>
+        ${it._next!==undefined?`
+          <div class="addrow"><input class="txt" placeholder="設定下一個加一分行動…" value="${esc(it._next)}"
+            oninput="state.items[${i}]._next=this.value">
+            <button class="btn btn-primary btn-sm" onclick="saveNext(${i})">設定</button></div>`:''}
+      </div>`).join('')}
+    <div class="box"><strong>🔄 回補：</strong>每完成一個加一分行動，這項專業就往「硬資產」靠近一步，
+      同時回補你的 S 軸 profile。分數養起來後，回去重評職缺勝率會更準。</div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="state.step='setup';render()">← 改設定</button>
+      <a href="prototype-breakthrough-b-jobfit.html" style="text-decoration:none;">
+        <button class="btn btn-primary">回去重評職缺勝率 →</button></a>
+    </div>`;
+}
+function complete(i){
+  const it=state.items[i];
+  it.done++; it.score=Math.min(it.score+1,5);
+  if(it.score<5) it._next=''; else delete it._next;   // 達標就不再要求下一步
+  render();
+}
+function saveNext(i){
+  const it=state.items[i];
+  if(it._next&&it._next.trim()){ it.action=it._next.trim(); delete it._next; }
+  render();
+}
+render();
+</script>
+</body>
+</html>

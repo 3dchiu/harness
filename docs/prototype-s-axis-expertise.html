@@ -150,6 +150,11 @@ function renderCheck(){
       <button class="btn btn-primary" ${allDone?'':'disabled'} onclick="state.step='result';render()">看我的專業資產 →</button>
     </div>`;
 }
+function goPlusOne(){
+  const prove=state.items.filter(it=>classify(it)==='prove').map(it=>it.name);
+  try{ localStorage.setItem('growme_prove_items', JSON.stringify(prove)); }catch(e){}
+  location.href='prototype-plus-one-action.html';
+}
 function setP(i,v){state.items[i].proof=v;render();}
 function setT(i,v){state.items[i].transfer=v;render();}
 function removeItem(i){state.items.splice(i,1); if(state.items.length<2){state.step='list';} render();}
@@ -200,6 +205,9 @@ function renderResult(){
     <p class="hint">每一項想一個「這週能做、能被別人看到」的最小成果。</p>
     ${prove.map(it=>`<div class="plus"><span class="ic">＋1</span>
       <div><strong>${it.name}</strong>：要讓人相信你會，你需要一個拿得出來的成果——這週的第一步是什麼？</div></div>`).join('')}
+    <div style="text-align:center;margin-top:14px;">
+      <button class="btn btn-primary" onclick="goPlusOne()">把這些變成可追蹤的加一分行動 →</button>
+    </div>
     `:''}
 
     <div class="box"><strong>🔄 回補與閉環：</strong>
