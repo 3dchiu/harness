@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>突破型 B · 敘事落差｜職缺勝率 × 7天履歷改寫</title>
+<!--
+  端到端樣板 #1：突破型 B（敘事落差）
+  流程：intro → input(職缺+經歷) → analysis(勝率/落差) → scaffold(7天骨架) → cta(真人)
+
+  架構對應（見 docs/career-positioning-app-architecture.md）：
+   - Layer 1 規則化：requirement 抽取 + 落差分類
+   - Layer 2 AI 客製：個人化變數 {目標職缺}{你的強項}{你的落差} 填入骨架 + 反思
+   - Layer 3 真人：真實能力缺口多 / 改寫後仍無回應 → 交棒顧問
+   - Loop B 回補：職缺關鍵字 + 投遞回應 → W 軸 profile
+
+  ★ 待替換：analyzeFit() 內的 autoMatch() 是透明佔位引擎，
+    請用「職缺勝率工具」的真實邏輯 / 一次 LLM 呼叫取代。
+-->
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#F8FBFB; --surface:#FFFFFF; --ink:#1F3533; --ink-soft:#4A6361;
+    --muted:#8AA3A1; --line:#E5ECEB; --accent:#2DB3B2; --accent-soft:#E6F7F6;
+    --sage:#50A09B; --sand:#FEF6DB; --accent-secondary:#F9D366;
+  }
+  html,body{font-family:"PingFang TC","Noto Sans TC","Helvetica Neue",Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.65; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:720px; margin:0 auto; padding:48px 24px 96px;}
+  header.top{display:flex; justify-content:space-between; align-items:center; margin-bottom:40px;}
+  .brand{font-size:14px; letter-spacing:2px; color:var(--accent); font-weight:700; text-transform:uppercase;}
+  .progress-track{flex:1; max-width:320px; margin-left:24px; height:4px; background:var(--line); border-radius:2px; overflow:hidden;}
+  .progress-fill{height:100%; background:var(--accent); width:0%; transition:width .5s cubic-bezier(.2,.8,.2,1);}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:40px 36px; box-shadow:0 4px 20px rgba(39,177,176,.05);}
+  .eyebrow{font-size:12px; letter-spacing:3px; color:var(--accent); text-transform:uppercase; margin-bottom:16px; font-weight:700;}
+  h1{font-size:28px; line-height:1.35; font-weight:700; margin-bottom:18px; letter-spacing:-.5px;}
+  h2{font-size:20px; font-weight:600; margin-bottom:12px;}
+  p{margin-bottom:12px; color:var(--ink-soft);}
+  p.lead{font-size:17px; color:var(--ink);}
+  .badge{display:inline-block; background:var(--accent); color:#fff; padding:6px 14px; border-radius:20px; font-size:12px; letter-spacing:2px; margin-bottom:18px; font-weight:600;}
+  label.fld{display:block; font-size:14px; font-weight:600; color:var(--ink); margin:18px 0 6px;}
+  textarea, input.txt{width:100%; border:1.5px solid var(--line); border-radius:8px; padding:14px 16px; font-size:15px; font-family:inherit; outline:none; transition:border-color .15s; resize:vertical;}
+  textarea:focus, input.txt:focus{border-color:var(--accent);}
+  textarea{min-height:120px; line-height:1.6;}
+  .hint{font-size:13px; color:var(--muted); margin-top:6px;}
+  .btn{border:none; padding:14px 28px; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s ease; letter-spacing:.5px;}
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-primary:hover{background:#239493; transform:translateY(-1px);}
+  .btn-primary:disabled{background:var(--line); color:var(--muted); cursor:not-allowed; transform:none;}
+  .btn-secondary{background:transparent; color:var(--muted); padding:14px 0;}
+  .btn-secondary:hover{color:var(--accent);}
+  .actions{display:flex; justify-content:space-between; align-items:center; margin-top:32px;}
+  /* 勝率儀表 */
+  .gauge{display:flex; align-items:center; gap:20px; background:var(--accent-soft); border-radius:12px; padding:22px 24px; margin:8px 0 22px;}
+  .gauge .num{font-size:46px; font-weight:800; color:var(--accent); line-height:1;}
+  .gauge .meta{font-size:14px; color:var(--ink-soft);}
+  /* 要求列表 */
+  .req{display:flex; align-items:flex-start; gap:12px; border:1.5px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:10px; background:#fff;}
+  .req .txt2{flex:1; font-size:15px; color:var(--ink);}
+  .state-btns{display:flex; gap:6px; flex-shrink:0;}
+  .sbtn{font-size:12px; padding:6px 10px; border-radius:14px; border:1.5px solid var(--line); background:#fff; cursor:pointer; color:var(--muted); font-weight:600; font-family:inherit;}
+  .sbtn.on-full{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .sbtn.on-part{background:var(--accent-secondary); border-color:var(--accent-secondary); color:#5a4a10;}
+  .sbtn.on-none{background:#F4DEDE; border-color:#E9C4C4; color:#9A4A4A;}
+  .tag{display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px; margin-left:8px; font-weight:600; vertical-align:middle;}
+  .tag-part{background:var(--sand); color:#927218;}
+  .tag-none{background:#F4DEDE; color:#9A4A4A;}
+  .tag-full{background:var(--accent-soft); color:var(--accent);}
+  /* 骨架日卡 */
+  .day{border:1.5px solid var(--line); border-radius:12px; padding:18px 20px; margin-bottom:14px; background:#fff;}
+  .day .dnum{display:inline-block; background:var(--accent); color:#fff; font-size:12px; font-weight:700; padding:3px 10px; border-radius:12px; margin-bottom:8px;}
+  .day .task{font-size:15.5px; font-weight:600; color:var(--ink); margin-bottom:6px;}
+  .day .reflect{font-size:13.5px; color:var(--ink-soft); background:var(--sand); border-radius:8px; padding:8px 12px; margin-top:8px;}
+  .day .reflect b{color:#927218;}
+  .box{background:var(--accent-soft); border:1px solid rgba(45,179,178,.2); border-radius:12px; padding:18px 22px; margin:22px 0; font-size:14.5px; color:var(--ink-soft);}
+  .box strong{color:var(--ink);}
+  .note{background:var(--sand); border-left:3px solid var(--accent-secondary); padding:14px 18px; border-radius:8px; margin:18px 0; font-size:14px; color:var(--ink-soft);}
+  .fade-in{animation:fadeIn .35s ease;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+  @media (max-width:640px){
+    .wrap{padding:24px 12px 64px;} header.top{flex-direction:column; align-items:flex-start; gap:12px; margin-bottom:24px;}
+    .progress-track{margin-left:0; max-width:100%; width:100%;} .card{padding:24px 16px; border-radius:12px;}
+    h1{font-size:22px;} .gauge .num{font-size:38px;} .actions{flex-direction:column-reverse; gap:12px;}
+    .actions .btn{width:100%; text-align:center;} .req{flex-direction:column;} .state-btns{width:100%;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">生涯設計師 · 突破型 B 樣板</div>
+    <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+  </header>
+  <div id="screen" class="card fade-in"></div>
+</div>
+
+<script>
+/* ============================================================
+   突破型 B（敘事落差）端到端樣板
+   ============================================================ */
+const state = {
+  step: 'intro',
+  job: '',            // 職缺描述
+  exp: '',            // 你的經歷
+  role: '',           // 目標角色
+  reqs: [],           // [{text, st}] st: 2=有 1=部分 0=無
+};
+
+const STEPS = { intro:15, input:40, analysis:70, scaffold:90, cta:100 };
+const screen = document.getElementById('screen');
+
+function setProgress(){ document.getElementById('progress').style.width = (STEPS[state.step]||0)+'%'; }
+function render(){
+  screen.classList.remove('fade-in'); void screen.offsetWidth; screen.classList.add('fade-in');
+  setProgress(); window.scrollTo({top:0, behavior:'smooth'});
+  ({intro:renderIntro, input:renderInput, analysis:renderAnalysis, scaffold:renderScaffold, cta:renderCTA}[state.step])();
+}
+
+/* ---------- 1. intro ---------- */
+function renderIntro(){
+  screen.innerHTML = `
+    <div class="badge">突破型 · B 敘事落差</div>
+    <h1>你有能力，但市場看不懂</h1>
+    <p class="lead">你的方向沒問題（S 高），卡的是「進不去」（W 低）。最常見的原因不是你不夠好，
+      而是<strong>履歷與面試沒把你的價值，翻譯成這個職缺聽得懂的語言</strong>。</p>
+    <div class="box"><strong>這條樣板會帶你做：</strong><br>
+      ① 貼上一個你想要的職缺 ② 看出你的勝率與「敘事落差」 ③ 拿到一份 7 天履歷改寫骨架。<br>
+      重點不是重投 100 封，是把<strong>這一個職缺</strong>講對。</div>
+    <div class="actions"><span></span>
+      <button class="btn btn-primary" onclick="state.step='input';render()">開始 →</button></div>`;
+}
+
+/* ---------- 2. input ---------- */
+function renderInput(){
+  screen.innerHTML = `
+    <div class="eyebrow">STEP 1 · 輸入</div>
+    <h2>貼上職缺，與你目前的經歷</h2>
+    <label class="fld">🎯 目標角色（職稱）</label>
+    <input class="txt" id="role" placeholder="例：產品經理 / 資料分析師" value="${state.role}">
+    <label class="fld">📋 職缺描述（貼上 JD，越完整越準）</label>
+    <textarea id="job" placeholder="把職缺的「工作內容」與「應徵條件」整段貼進來，一行一項最好。">${state.job}</textarea>
+    <label class="fld">🧑 你的相關經歷（現有履歷段落 / 做過的事）</label>
+    <textarea id="exp" placeholder="把你履歷上相關的經歷貼進來，或條列你做過的事。">${state.exp}</textarea>
+    <p class="hint">資料只在你的瀏覽器裡計算，不會上傳。</p>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="state.step='intro';render()">← 返回</button>
+      <button class="btn btn-primary" onclick="goAnalyze()">分析勝率與落差 →</button>
+    </div>`;
+}
+function goAnalyze(){
+  state.role = document.getElementById('role').value.trim();
+  state.job  = document.getElementById('job').value.trim();
+  state.exp  = document.getElementById('exp').value.trim();
+  if(state.job.length < 10 || state.exp.length < 5){
+    alert('請至少貼上職缺描述與一點你的經歷，分析才會準。'); return;
+  }
+  analyzeFit();
+  state.step = 'analysis'; render();
+}
+
+/* ---------- 落差分析引擎 ---------- */
+/* ★ 待替換：以下 autoMatch 為透明佔位（字元 2-gram 重疊）。
+   正式版請以「職缺勝率工具」的邏輯或一次 LLM 呼叫取代，
+   回傳每個要求的 符合度 + 缺口說明即可，其餘流程不變。 */
+function extractRequirements(job){
+  let parts = job.split(/[\n、,，;；。．・•\-]+/).map(s=>s.trim())
+                 .filter(s=> s.length>=4 && s.length<=42);
+  // 去重、去掉純標題類
+  const seen = new Set(); const out = [];
+  for(const p of parts){ if(!seen.has(p)){ seen.add(p); out.push(p);} }
+  return out.slice(0,6);
+}
+function autoMatch(req, exp){
+  const grams = [];
+  for(let i=0;i<req.length-1;i++) grams.push(req.slice(i,i+2));
+  if(!grams.length) return 0;
+  let hit=0; grams.forEach(g=>{ if(exp.includes(g)) hit++; });
+  const r = hit/grams.length;
+  return r>0.5 ? 2 : (r>0.15 ? 1 : 0);   // 2=有 1=部分 0=無
+}
+function analyzeFit(){
+  const reqs = extractRequirements(state.job);
+  state.reqs = reqs.map(t=>({ text:t, st: autoMatch(t, state.exp) }));
+  if(!state.reqs.length){ // 退路：抓不到結構時，至少放一條
+    state.reqs = [{text:'（無法自動抓出要求，請手動補上 JD 的關鍵條件）', st:1}];
+  }
+}
+function winRate(){
+  const tot = state.reqs.length*2;
+  const got = state.reqs.reduce((a,r)=>a+r.st,0);
+  return Math.round(got/tot*100);
+}
+/* ---------- 3. analysis ---------- */
+function stWord(st){ return st===2?'有':(st===1?'部分':'無'); }
+function renderAnalysis(){
+  const wr = winRate();
+  const part = state.reqs.filter(r=>r.st===1);
+  const none = state.reqs.filter(r=>r.st===0);
+  const full = state.reqs.filter(r=>r.st===2);
+  let verdict;
+  if(none.length > full.length) verdict = '目前以<strong>真實落差</strong>為主——這偏向「能力落差」，不只是敘事問題。';
+  else if(part.length >= 1) verdict = '你的卡點是典型<strong>敘事落差</strong>：你有料，但履歷沒講清楚。這正是可以快速補的。';
+  else verdict = '你和這個職缺的匹配度不錯，重點放在把強項講得更銳利。';
+
+  screen.innerHTML = `
+    <div class="eyebrow">STEP 2 · 勝率與落差</div>
+    <div class="gauge">
+      <div class="num">${wr}%</div>
+      <div class="meta"><strong>初步匹配度</strong><br>對「${state.role||'此職缺'}」的敘事契合程度。<br>
+        <span style="color:var(--muted)">點下方每項的「無／部分／有」可自行校正。</span></div>
+    </div>
+    <p>${verdict}</p>
+    <h2 style="margin-top:18px; font-size:17px;">職缺要求 × 你的符合度</h2>
+    ${state.reqs.map((r,i)=>`
+      <div class="req">
+        <div class="txt2">${r.text}
+          ${r.st===1?'<span class="tag tag-part">敘事落差</span>':''}
+          ${r.st===0?'<span class="tag tag-none">真實缺口</span>':''}
+          ${r.st===2?'<span class="tag tag-full">強項</span>':''}
+        </div>
+        <div class="state-btns">
+          <button class="sbtn ${r.st===0?'on-none':''}" onclick="setReq(${i},0)">無</button>
+          <button class="sbtn ${r.st===1?'on-part':''}" onclick="setReq(${i},1)">部分</button>
+          <button class="sbtn ${r.st===2?'on-full':''}" onclick="setReq(${i},2)">有</button>
+        </div>
+      </div>`).join('')}
+    <div class="note">
+      <strong>怎麼讀這張表：</strong>
+      「部分」= 你其實做過、但履歷沒寫清楚 → <b>敘事落差，7 天可補</b>。
+      「無」= 真的還沒有 → 這是能力缺口，要嘛補、要嘛換切入點（屬於真人諮詢的判斷）。
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="state.step='input';render()">← 改輸入</button>
+      <button class="btn btn-primary" onclick="state.step='scaffold';render()">生成 7 天改寫骨架 →</button>
+    </div>`;
+}
+function setReq(i,st){ state.reqs[i].st = st; render(); }
+
+/* ---------- 4. scaffold（第二層：行動骨架）---------- */
+function renderScaffold(){
+  const part = state.reqs.filter(r=>r.st===1).map(r=>r.text);
+  const none = state.reqs.filter(r=>r.st===0).map(r=>r.text);
+  const full = state.reqs.filter(r=>r.st===2).map(r=>r.text);
+  const role = state.role || '目標職缺';
+  const gapList = part.length? part : ['（你標記的「部分符合」項目）'];
+  const topGap = gapList[0];
+
+  // 個人化變數已填入：{目標職缺}=role、{敘事落差}=part、{強項}=full、{真實缺口}=none
+  const days = [
+    { t:`挑出「${role}」最關鍵的 3 個要求，圈出你標為「部分」的：${gapList.slice(0,3).join('、')}`,
+      r:`這些要求，你其實做過卻沒寫清楚——對嗎？哪一個落差最可惜？` },
+    { t:`針對「${topGap}」，寫出 1 個你真的做過的具體事例（情境→你的行動→結果）。`,
+      r:`你描述時，有沒有預設了對方不知道的背景？` },
+    { t:`把這個事例量化：補上數字、規模、影響（如「省下 30% 工時」「帶 3 人」）。`,
+      r:`沒有數字的那句，能不能換成一個可被驗證的事實？` },
+    { t:`用「${role}」職缺裡的原話/關鍵字，改寫你的事例（把你的話翻成它的語言）。`,
+      r:`你的強項（${(full[0]||'你最強的一項')}）有沒有用對方的詞講出來？` },
+    { t:`講給 1 個懂這個市場的人聽，記下他「聽不懂」或「沒感覺」的地方。`,
+      r:`他卡住的那一句，是你最該改的那一句。` },
+    { t:`依回饋改寫履歷「第一段摘要」＋對應的 2 條 bullet。`,
+      r:`改完後，一個陌生人能在 10 秒內說出你適合這個職缺嗎？` },
+    { t:`投遞這個職缺 / 更新 LinkedIn，並記錄送出日期與回應。`,
+      r:`這是市場回報（W 驗證度）的開始——有回應與沒回應，都是資料。` },
+  ];
+
+  screen.innerHTML = `
+    <div class="eyebrow">STEP 3 · 你的 7 天履歷改寫骨架</div>
+    <h2>把「${role}」這一個職缺，講對</h2>
+    <p>骨架依你的落差自動帶入：聚焦你標記的 <strong>${part.length} 個敘事落差</strong>，
+       善用 <strong>${full.length} 個強項</strong>。每天 15–20 分鐘。</p>
+    ${days.map((d,i)=>`
+      <div class="day">
+        <span class="dnum">Day ${i+1}</span>
+        <div class="task">${d.t}</div>
+        <div class="reflect">🪞 反思：<b>${d.r}</b></div>
+      </div>`).join('')}
+
+    ${none.length? `<div class="note"><strong>關於「真實缺口」：</strong>
+      你標了 ${none.length} 項目前還沒有（${none.join('、')}）。
+      這不是改寫能解決的——是「補能力」或「換切入點」的<strong>策略判斷</strong>，建議交給真人諮詢，不要硬凹進履歷。</div>`:''}
+
+    <div class="box"><strong>🔄 Loop B 回補：</strong>
+      這次的職缺關鍵字會存進你的「市場認知（W 軸）」檔案；投遞回應會累積成你的市場驗證度。
+      做幾輪後，App 會看出你「總是卡在哪一類要求」，那就是你下一步該補的。</div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="state.step='analysis';render()">← 回落差表</button>
+      <button class="btn btn-primary" onclick="state.step='cta';render()">改寫後還是沒回應？ →</button>
+    </div>`;
+}
+
+/* ---------- 5. cta（第三層：真人）---------- */
+function renderCTA(){
+  screen.innerHTML = `
+    <div class="eyebrow">下一步 · 當骨架不夠時</div>
+    <h1 style="font-size:24px;">有些事，模板和 AI 幫不了你</h1>
+    <p>如果你改寫後投了幾次仍沒回應，或「真實缺口」很多，問題就不在用字，而在<strong>策略判斷</strong>：
+       該補能力、還是換一個切入點？這條路到底值不值得繼續？</p>
+    <div class="box" style="background:var(--surface); border:1.5px solid var(--line);">
+      <strong style="color:var(--accent); font-size:18px;">一對一職涯諮詢</strong>
+      <p style="margin:10px 0 0;">帶著你今天的勝率分析與改寫稿，60 分鐘把「敘事 vs 能力 vs 切入點」一次釐清，
+        走出一份你自己的行動判斷。</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="state.step='scaffold';render()">← 回骨架</button>
+      <a href="https://lifecareerdesigner.com/consultation-and-courses/#1on1" target="_blank" style="text-decoration:none;">
+        <button class="btn btn-primary">預約一對一諮詢 →</button></a>
+    </div>`;
+}
+
+render();
+</script>
+</body>
+</html>
