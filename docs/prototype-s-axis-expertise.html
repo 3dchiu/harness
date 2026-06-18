@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S 軸 · 專業梳理任務｜把「我會什麼」從感覺變成可舉證的清單</title>
+<!--
+  端到端樣板 #2：S 軸 · 專業梳理任務
+  落點：突破型B 勝率 ≤6（W 真實回報差 → 反證 S 專業被高估）→ 路由到這裡
+  流程：intro → list(腦力傾倒) → check(逐項：舉證度×遷移度) → result(三類資產+高估讀數+加一分行動)
+
+  核心邏輯（呼應 PDF「S 穩定度：說了後變不變」）：
+   - 舉證度＝你能不能拿出一致的具體證據（不穩＝高估）
+   - 遷移度＝換個產業/公司還成不成立（決定①產業關係的成本）
+  輸出：硬資產 / 待證明 / 情境資產 → 回補 S 軸 profile，並可回去重評職缺勝率（閉環）
+-->
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{--bg:#F8FBFB;--surface:#FFFFFF;--ink:#1F3533;--ink-soft:#4A6361;--muted:#8AA3A1;
+    --line:#E5ECEB;--accent:#2DB3B2;--accent-soft:#E6F7F6;--sand:#FEF6DB;--accent-secondary:#F9D366;}
+  html,body{font-family:"PingFang TC","Noto Sans TC","Helvetica Neue",Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:720px;margin:0 auto;padding:48px 24px 96px;}
+  header.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;}
+  .brand{font-size:14px;letter-spacing:2px;color:var(--accent);font-weight:700;text-transform:uppercase;}
+  .progress-track{flex:1;max-width:320px;margin-left:24px;height:4px;background:var(--line);border-radius:2px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--accent);width:0%;transition:width .5s cubic-bezier(.2,.8,.2,1);}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:40px 36px;box-shadow:0 4px 20px rgba(39,177,176,.05);}
+  .eyebrow{font-size:12px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:16px;font-weight:700;}
+  h1{font-size:28px;line-height:1.35;font-weight:700;margin-bottom:18px;letter-spacing:-.5px;}
+  h2{font-size:20px;font-weight:600;margin-bottom:12px;}
+  p{margin-bottom:12px;color:var(--ink-soft);} p.lead{font-size:17px;color:var(--ink);}
+  .badge{display:inline-block;background:var(--accent);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;letter-spacing:2px;margin-bottom:18px;font-weight:600;}
+  label.fld{display:block;font-size:14px;font-weight:600;color:var(--ink);margin:18px 0 6px;}
+  textarea{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:14px 16px;font-size:15px;font-family:inherit;outline:none;transition:border-color .15s;resize:vertical;min-height:150px;line-height:1.8;}
+  textarea:focus{border-color:var(--accent);}
+  .hint{font-size:13px;color:var(--muted);margin-top:6px;}
+  .btn{border:none;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s ease;letter-spacing:.5px;}
+  .btn-primary{background:var(--accent);color:#fff;} .btn-primary:hover{background:#239493;transform:translateY(-1px);}
+  .btn-primary:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;transform:none;}
+  .btn-secondary{background:transparent;color:var(--muted);padding:14px 0;} .btn-secondary:hover{color:var(--accent);}
+  .actions{display:flex;justify-content:space-between;align-items:center;margin-top:32px;}
+  .item{border:1.5px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px;background:#fff;}
+  .item .nm{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+  .item .nm .rm{float:right;font-size:12px;color:var(--muted);font-weight:500;cursor:pointer;}
+  .qrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+  .qrow .ql{font-size:13px;color:var(--ink-soft);min-width:128px;}
+  .sbtn{font-size:12.5px;padding:6px 12px;border-radius:14px;border:1.5px solid var(--line);background:#fff;cursor:pointer;color:var(--muted);font-weight:600;font-family:inherit;}
+  .sbtn.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .sbtn.on-warn{background:var(--accent-secondary);border-color:var(--accent-secondary);color:#5a4a10;}
+  .bucket{border-radius:12px;padding:18px 20px;margin-bottom:14px;}
+  .b-hard{background:var(--accent-soft);border:1px solid rgba(45,179,178,.25);}
+  .b-prove{background:var(--sand);border:1px solid rgba(249,211,102,.4);}
+  .b-ctx{background:#F2F5F5;border:1px solid var(--line);}
+  .bucket .bt{font-size:15px;font-weight:700;margin-bottom:6px;}
+  .b-hard .bt{color:var(--accent);} .b-prove .bt{color:#927218;} .b-ctx .bt{color:var(--ink-soft);}
+  .chip{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:14px;padding:4px 12px;margin:4px 6px 0 0;font-size:13.5px;color:var(--ink);}
+  .read{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:20px 22px;margin:6px 0 20px;}
+  .read .big{font-size:30px;font-weight:800;color:#B5891F;line-height:1.2;}
+  .box{background:var(--accent-soft);border:1px solid rgba(45,179,178,.2);border-radius:12px;padding:18px 22px;margin:22px 0;font-size:14.5px;color:var(--ink-soft);} .box strong{color:var(--ink);}
+  .plus{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;font-size:14px;color:var(--ink-soft);}
+  .plus .ic{flex-shrink:0;color:var(--accent);font-weight:bold;}
+  .fade-in{animation:fadeIn .35s ease;} @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  @media(max-width:640px){.wrap{padding:24px 12px 64px;}header.top{flex-direction:column;align-items:flex-start;gap:12px;margin-bottom:24px;}
+    .progress-track{margin-left:0;max-width:100%;width:100%;}.card{padding:24px 16px;border-radius:12px;}h1{font-size:22px;}
+    .actions{flex-direction:column-reverse;gap:12px;}.actions .btn{width:100%;text-align:center;}.qrow .ql{min-width:100%;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">生涯設計師 · S 軸 專業梳理</div>
+    <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+  </header>
+  <div id="screen" class="card fade-in"></div>
+</div>
+
+<script>
+const state={ step:'intro', raw:'', items:[] };   // item={name, proof:null(2能/1勉強/0舉不出), transfer:null(2可遷移/1需重證/0情境限定)}
+const STEPS={intro:12,list:35,check:72,result:100};
+const screen=document.getElementById('screen');
+function setProgress(){document.getElementById('progress').style.width=(STEPS[state.step]||0)+'%';}
+function render(){screen.classList.remove('fade-in');void screen.offsetWidth;screen.classList.add('fade-in');
+  setProgress();window.scrollTo({top:0,behavior:'smooth'});
+  ({intro:renderIntro,list:renderList,check:renderCheck,result:renderResult}[state.step])();}
+
+function renderIntro(){
+  screen.innerHTML=`
+    <div class="badge">S 軸 · 專業梳理任務</div>
+    <h1>把「我到底會什麼」<br>從感覺，變成能舉證的清單</h1>
+    <p class="lead">如果你投職缺的勝率偏低，多半不是你不好——是你對自己「專業」的認知，
+      <strong>比能拿出來證明的多了一些</strong>。這個任務幫你誠實盤點一次。</p>
+    <div class="box"><strong>兩個篩子：</strong><br>
+      ① <strong>舉證度</strong>：這項技能，你拿得出具體成果嗎？（呼應「說了後變不變」）<br>
+      ② <strong>遷移度</strong>：換個公司/產業，它還成立嗎？<br>
+      篩完，你會清楚分出：能打的硬資產、被高估的待證明、和只在原地有效的情境資產。</div>
+    <div class="actions"><span></span>
+      <button class="btn btn-primary" onclick="state.step='list';render()">開始盤點 →</button></div>`;
+}
+
+function renderList(){
+  screen.innerHTML=`
+    <div class="eyebrow">STEP 1 · 腦力傾倒</div>
+    <h2>列出你認為自己「會」的專業</h2>
+    <p class="hint">技能、工具、做過的事都可以，一行一項。先別篩選，想到就寫（建議 5–8 項）。</p>
+    <label class="fld">我的專業清單</label>
+    <textarea id="raw" placeholder="例：
+帶 5 人團隊
+跑數位廣告投放
+寫 SQL 撈數據
+跨部門溝通協調
+做使用者訪談">${state.raw}</textarea>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="state.step='intro';render()">← 返回</button>
+      <button class="btn btn-primary" onclick="parseItems()">逐項檢驗 →</button>
+    </div>`;
+}
+function parseItems(){
+  state.raw=document.getElementById('raw').value;
+  let arr=state.raw.split(/\n+/).map(s=>s.trim()).filter(s=>s.length>0);
+  const seen=new Set(); const items=[];
+  for(const a of arr){ if(!seen.has(a)){ seen.add(a); items.push({name:a,proof:null,transfer:null}); } }
+  if(items.length<2){ alert('至少列 2 項，盤點才有意義'); return; }
+  state.items=items.slice(0,10);
+  state.step='check'; render();
+}
+
+function renderCheck(){
+  const allDone=state.items.every(it=>it.proof!==null&&it.transfer!==null);
+  screen.innerHTML=`
+    <div class="eyebrow">STEP 2 · 兩個篩子</div>
+    <h2>逐項誠實檢驗</h2>
+    <p class="hint">① 你拿得出證據嗎？　② 換個地方還成立嗎？</p>
+    ${state.items.map((it,i)=>`
+      <div class="item">
+        <div class="nm">${it.name}<span class="rm" onclick="removeItem(${i})">移除</span></div>
+        <div class="qrow"><span class="ql">① 舉得出具體成果？</span>
+          <button class="sbtn ${it.proof===2?'on':''}" onclick="setP(${i},2)">能</button>
+          <button class="sbtn ${it.proof===1?'on-warn':''}" onclick="setP(${i},1)">勉強</button>
+          <button class="sbtn ${it.proof===0?'on-warn':''}" onclick="setP(${i},0)">舉不出</button>
+        </div>
+        <div class="qrow"><span class="ql">② 換產業/公司還成立？</span>
+          <button class="sbtn ${it.transfer===2?'on':''}" onclick="setT(${i},2)">可遷移</button>
+          <button class="sbtn ${it.transfer===1?'on':''}" onclick="setT(${i},1)">需重新證明</button>
+          <button class="sbtn ${it.transfer===0?'on':''}" onclick="setT(${i},0)">只在原情境</button>
+        </div>
+      </div>`).join('')}
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="state.step='list';render()">← 改清單</button>
+      <button class="btn btn-primary" ${allDone?'':'disabled'} onclick="state.step='result';render()">看我的專業資產 →</button>
+    </div>`;
+}
+function setP(i,v){state.items[i].proof=v;render();}
+function setT(i,v){state.items[i].transfer=v;render();}
+function removeItem(i){state.items.splice(i,1); if(state.items.length<2){state.step='list';} render();}
+
+/* 分類：1)舉不出→待證明  2)可遷移→硬資產  3)其餘→情境資產 */
+function classify(it){
+  if(it.proof===0) return 'prove';
+  if(it.transfer===2) return 'hard';
+  return 'ctx';
+}
+function renderResult(){
+  const hard=state.items.filter(it=>classify(it)==='hard');
+  const prove=state.items.filter(it=>classify(it)==='prove');
+  const ctx=state.items.filter(it=>classify(it)==='ctx');
+  const n=state.items.length, m=prove.length;
+  const pct=Math.round(m/n*100);
+  screen.innerHTML=`
+    <div class="eyebrow">STEP 3 · 你的專業資產盤點</div>
+    <div class="read">
+      <div>你列了 <strong>${n}</strong> 項專業，其中</div>
+      <div class="big">${m} 項（${pct}%）目前舉不出證據</div>
+      <div style="color:var(--ink-soft);margin-top:6px;">
+        ${m===0?'你的專業認知相當扎實——每一項都站得住。問題可能不在專業本身。'
+          :`這 ${m} 項，很可能就是你<strong>高估自己</strong>、也是職缺勝率偏低的來源。看清楚它，就是補起來的第一步。`}
+      </div>
+    </div>
+
+    <div class="bucket b-hard">
+      <div class="bt">💪 硬資產（能舉證 × 可遷移）·${hard.length}</div>
+      <div style="color:var(--ink-soft);font-size:13.5px;">你的履歷主力，能提高「職務重疊」勝率，放大它。</div>
+      <div>${hard.map(it=>`<span class="chip">${it.name}</span>`).join('')||'<span style="color:var(--muted);font-size:13px;">（暫無——這正是要補的方向）</span>'}</div>
+    </div>
+
+    <div class="bucket b-prove">
+      <div class="bt">🔨 待證明（以為會 × 舉不出證據）·${prove.length}</div>
+      <div style="color:#927218;font-size:13.5px;">你高估的部分。不是不會，是還沒有「能被看到的成果」。</div>
+      <div>${prove.map(it=>`<span class="chip">${it.name}</span>`).join('')||'<span style="color:var(--muted);font-size:13px;">（很好，沒有高估項）</span>'}</div>
+    </div>
+
+    <div class="bucket b-ctx">
+      <div class="bt">📍 情境資產（能舉證 × 換地方會打折）·${ctx.length}</div>
+      <div style="color:var(--ink-soft);font-size:13.5px;">在原公司有效，跨產業要重新證明——這解釋了「產業關係」為何是成本。</div>
+      <div>${ctx.map(it=>`<span class="chip">${it.name}</span>`).join('')||'<span style="color:var(--muted);font-size:13px;">（無）</span>'}</div>
+    </div>
+
+    ${prove.length?`
+    <h2 style="font-size:17px;margin-top:26px;">把「待證明」變硬資產：加一分行動</h2>
+    <p class="hint">每一項想一個「這週能做、能被別人看到」的最小成果。</p>
+    ${prove.map(it=>`<div class="plus"><span class="ic">＋1</span>
+      <div><strong>${it.name}</strong>：要讓人相信你會，你需要一個拿得出來的成果——這週的第一步是什麼？</div></div>`).join('')}
+    `:''}
+
+    <div class="box"><strong>🔄 回補與閉環：</strong>
+      這份盤點會存進你的 <strong>S 軸 profile</strong>（專業維度），提高你的 S 穩定度。<br>
+      更重要的是——帶著這份<strong>更誠實的盤點</strong>，回去重評職缺勝率，你的「職務重疊 / 條件符合」會打得更準。
+      這就是 W（市場真實回報）→ S（重新盤點）→ W（更準的評估）的閉環。</div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="state.step='check';render()">← 改檢驗</button>
+      <a href="prototype-breakthrough-b-jobfit.html" style="text-decoration:none;">
+        <button class="btn btn-primary">帶新盤點回去評職缺 →</button></a>
+    </div>`;
+}
+render();
+</script>
+</body>
+</html>
