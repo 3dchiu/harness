@@ -8,6 +8,7 @@
 | 檔案 | 角色 |
 |------|------|
 | `prototype-s-axis-values.html` ★ | 價值觀探索（雙重排序＋一致性/核心判讀） |
+| `prototype-s-axis-assessments.html` ★ | 三項測驗（DISC性格／Holland興趣／Career Anchor價值觀）＋興趣盤點 |
 | `prototype-plus-one-action.html` ★ | 價值觀加一分行動追蹤（1–10） |
 | `prototype-s-axis-expertise.html` ★ | 專業梳理（兩個篩子→三類資產）＋舉證/補強 |
 | `prototype-breakthrough-b-jobfit.html` ★ | 職缺勝率（三維13分）＋五向分流＋7天履歷改寫 |
