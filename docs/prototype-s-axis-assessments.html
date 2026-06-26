@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>S 軸 · 自我探索測驗中心｜DISC / Holland / Career Anchor</title>
+<title>S 軸 · 自我探索測評中心｜人格特質／興趣方向／職業價值觀</title>
 <!--
-  端到端樣板 #6：S 軸 · 三項測驗 ＋ 興趣盤點（讓 S 軸四維到齊）
-  hub → DISC(性格) / Holland(興趣) / Career Anchor(價值觀) / 興趣盤點
-  每項「測完不是結束」：DISC列10行為核對；Holland列提案做過/想試/沒興趣；Anchor注入3價值觀。
-  ⚠️ 題目為簡化原創示範版，非官方版權題本。內容邏輯待你校。
+  端到端樣板 #6（改版）：S 軸 · 三項測評 ＋ 興趣盤點
+  人格特質測評(DISC,20題:每特質職場3+生活1+人際1) / 興趣方向測評(Holland) /
+  職業價值觀測評(Career Anchor,排序計分4題×8項,主要+次要錨定) / 興趣盤點(接興趣方向測評結果)
+  ⚠️ 題目為原創示範版，非官方版權題本。內容邏輯待你校。
 -->
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -23,7 +23,7 @@
   .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:38px 34px;box-shadow:0 4px 20px rgba(39,177,176,.05);}
   .eyebrow{font-size:12px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:14px;font-weight:700;}
   h1{font-size:26px;line-height:1.35;font-weight:700;margin-bottom:16px;}
-  h2{font-size:20px;font-weight:600;margin-bottom:10px;}
+  h2{font-size:19px;font-weight:600;margin-bottom:10px;}
   p{margin-bottom:12px;color:var(--ink-soft);} p.lead{font-size:16px;color:var(--ink);}
   .badge{display:inline-block;background:var(--accent);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;letter-spacing:2px;margin-bottom:16px;font-weight:600;}
   .hint{font-size:13px;color:var(--muted);margin-top:6px;}
@@ -37,25 +37,33 @@
   .hubcard:hover{border-color:var(--accent);transform:translateY(-1px);}
   .hubcard .ic{width:42px;height:42px;border-radius:10px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
   .hubcard .t{flex:1;} .hubcard .t .n{font-size:16px;font-weight:700;} .hubcard .t .d{font-size:13px;color:var(--muted);}
-  .hubcard .st{font-size:12px;font-weight:700;padding:4px 10px;border-radius:12px;background:var(--line);color:var(--muted);}
+  .hubcard .st{font-size:12px;font-weight:700;padding:4px 10px;border-radius:12px;background:var(--line);color:var(--muted);white-space:nowrap;}
   .hubcard .st.done{background:var(--accent-soft);color:var(--accent);}
-  .q{border-bottom:1px solid var(--line);padding:14px 0;}
-  .q .qt{font-size:15px;font-weight:600;margin-bottom:10px;}
-  .scale{display:flex;gap:6px;} .scale button{flex:1;height:38px;border:1.5px solid var(--line);background:#fff;border-radius:7px;cursor:pointer;font-weight:700;color:var(--muted);font-family:inherit;}
+  .q{border-bottom:1px solid var(--line);padding:13px 0;}
+  .q .qt{font-size:15px;font-weight:600;margin-bottom:8px;}
+  .q .sc{display:inline-block;font-size:10px;color:var(--muted);background:var(--bg);border-radius:8px;padding:1px 7px;margin-right:6px;vertical-align:middle;}
+  .scale{display:flex;gap:6px;} .scale button{flex:1;height:36px;border:1.5px solid var(--line);background:#fff;border-radius:7px;cursor:pointer;font-weight:700;color:var(--muted);font-family:inherit;}
   .scale button.on{background:var(--accent);border-color:var(--accent);color:#fff;}
   .scalelab{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px;}
-  .resbox{background:var(--accent-soft);border-radius:12px;padding:22px;text-align:center;margin:8px 0 18px;}
-  .resbox .rt{font-size:26px;font-weight:800;color:var(--accent);} .resbox .rd{font-size:14px;color:var(--ink-soft);margin-top:6px;}
+  .resbox{background:var(--accent-soft);border-radius:12px;padding:20px;text-align:center;margin:8px 0 16px;}
+  .resbox .rt{font-size:24px;font-weight:800;color:var(--accent);} .resbox .rd{font-size:14px;color:var(--ink-soft);margin-top:6px;}
   .item{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:10px;padding:11px 14px;margin-bottom:8px;background:#fff;}
   .item .nm{flex:1;font-size:14.5px;}
   .seg{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;}
   .seg button{font-size:12px;padding:6px 10px;border:1.5px solid var(--line);background:#fff;border-radius:13px;cursor:pointer;color:var(--muted);font-weight:600;font-family:inherit;}
   .seg button.on{background:var(--accent);border-color:var(--accent);color:#fff;}
-  .seg button.on-y{background:var(--accent);border-color:var(--accent);color:#fff;}
-  .seg button.on-n{background:#F4DEDE;border-color:#E9C4C4;color:#9A4A4A;}
   .seg button.on-m{background:var(--accent-secondary);border-color:var(--accent-secondary);color:#5a4a10;}
+  .seg button.on-n{background:#F4DEDE;border-color:#E9C4C4;color:#9A4A4A;}
+  /* 排序選項 */
+  .rankopt{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px;background:#fff;cursor:pointer;transition:all .12s;}
+  .rankopt:hover{border-color:var(--accent);}
+  .rankopt.sel{border-color:var(--accent);background:var(--accent-soft);}
+  .rankopt .rk{width:26px;height:26px;border-radius:13px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--muted);flex-shrink:0;}
+  .rankopt.sel .rk{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .rankopt .ot{flex:1;font-size:14px;}
   .vchip{display:inline-block;background:#fff;border:1.5px solid var(--accent);color:var(--accent);border-radius:14px;padding:5px 14px;margin:4px 6px 0 0;font-weight:600;font-size:14px;}
   .box{background:var(--accent-soft);border:1px solid rgba(45,179,178,.2);border-radius:12px;padding:16px 20px;margin:18px 0;font-size:14px;color:var(--ink-soft);} .box strong{color:var(--ink);}
+  .otag{font-size:10px;color:var(--muted);background:var(--bg);border-radius:8px;padding:1px 7px;margin-left:6px;}
   .addrow{display:flex;gap:8px;margin-top:10px;}
   input.txt{flex:1;border:1.5px solid var(--line);border-radius:8px;padding:11px 14px;font-size:14.5px;font-family:inherit;outline:none;} input.txt:focus{border-color:var(--accent);}
   .fade-in{animation:fadeIn .35s ease;} @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
@@ -65,22 +73,39 @@
 </head>
 <body>
 <div class="wrap">
-  <header class="top"><div class="brand">生涯設計師 · 自我探索測驗</div>
+  <header class="top"><div class="brand">生涯設計師 · 自我探索測評</div>
     <div class="progress-track"><div class="progress-fill" id="progress"></div></div></header>
   <div id="screen" class="card fade-in"></div>
 </div>
 <script>
-/* ============ 資料 ============ */
+/* ============ 人格特質測評（DISC, 20題：每特質 職場3+生活1+人際1）============ */
 const DISC_Q=[
- {t:'我喜歡主導局面、做決定',d:'D'},{t:'面對挑戰我會直接迎戰',d:'D'},{t:'我重視結果勝過過程',d:'D'},
- {t:'我喜歡認識新朋友、炒熱氣氛',d:'I'},{t:'我擅長用言語影響別人',d:'I'},{t:'我做事憑熱情與直覺',d:'I'},
- {t:'我重視穩定與和諧',d:'S'},{t:'我有耐心、願意傾聽',d:'S'},{t:'我傾向配合團隊而非出風頭',d:'S'},
- {t:'我做事講求精確與規則',d:'C'},{t:'我會先分析資料再行動',d:'C'},{t:'我重視品質與細節',d:'C'}];
+ {t:'開會時我傾向主導討論方向、推動做決定。',d:'D',sc:'職場'},
+ {t:'工作遇到阻礙，我會直接出手解決而非等待。',d:'D',sc:'職場'},
+ {t:'我重視專案成果與效率，勝過過程細節。',d:'D',sc:'職場'},
+ {t:'安排出遊或聚會，我常是那個拍板決定的人。',d:'D',sc:'生活'},
+ {t:'意見不同時，我會直接表達立場、不怕衝突。',d:'D',sc:'人際'},
+ {t:'我擅長在會議中帶動氣氛、爭取認同。',d:'I',sc:'職場'},
+ {t:'我喜歡用故事或熱情說服同事支持我的點子。',d:'I',sc:'職場'},
+ {t:'比起獨自埋頭，我更喜歡與人協作的工作。',d:'I',sc:'職場'},
+ {t:'朋友聚會我常是炒熱氣氛、帶動話題的人。',d:'I',sc:'生活'},
+ {t:'我很快就能和初次見面的人打成一片。',d:'I',sc:'人際'},
+ {t:'我做事穩定可靠，會把份內的事顧好。',d:'S',sc:'職場'},
+ {t:'面對突然的工作變動，我需要時間適應。',d:'S',sc:'職場'},
+ {t:'我重視團隊和諧，不喜歡內部衝突。',d:'S',sc:'職場'},
+ {t:'我偏好熟悉、規律的生活步調。',d:'S',sc:'生活'},
+ {t:'朋友有困難時，我願意耐心傾聽與支持。',d:'S',sc:'人際'},
+ {t:'行動前我習慣先蒐集資料、分析清楚。',d:'C',sc:'職場'},
+ {t:'我對工作的品質與細節要求高。',d:'C',sc:'職場'},
+ {t:'我喜歡按明確的規則與標準做事。',d:'C',sc:'職場'},
+ {t:'規劃旅行或預算，我會做足功課與比較。',d:'C',sc:'生活'},
+ {t:'我比較慢熱，需要時間才會對人敞開。',d:'C',sc:'人際'}];
 const DISC_INFO={
  D:{n:'D 主導型（掌控者）',beh:['開會時常主導方向','遇問題先想怎麼解決','不怕衝突、敢表達反對','做決定快','重視效率與成果','喜歡掌控進度','對拖延沒耐心','願承擔責任與風險','目標導向','對人直接']},
  I:{n:'I 影響型（社交者）',beh:['喜歡與人互動','善於帶動氣氛','用故事或比喻說服人','樂觀有感染力','不喜歡孤立作業','重視被認可','點子多但易分心','表達豐富','交朋友很快','不愛繁瑣細節']},
  S:{n:'S 穩健型（支持者）',beh:['做事穩定可靠','願意傾聽他人','不喜歡突然的改變','重視團隊和諧','願意支持別人','衝突時傾向退讓','忠誠且有耐心','步調平穩','低調不搶功','需要時間適應變動']},
  C:{n:'C 謹慎型（分析者）',beh:['重視正確與精準','行動前先蒐集資料','按規則與標準做事','注意細節','不愛被催促','對品質要求高','獨立作業也自在','決策謹慎','喜歡有條理','對模糊指令不安']}};
+/* ============ 興趣方向測評（Holland）============ */
 const HOL_Q=[
  {t:'我喜歡動手做、操作工具或機械',d:'R'},{t:'我喜歡戶外或實作型的活動',d:'R'},
  {t:'我喜歡研究、分析、解決抽象問題',d:'I'},{t:'我對「為什麼」充滿好奇',d:'I'},
@@ -96,148 +121,193 @@ const HOL_PROP={
  S:['擔任志工或帶一次分享','教別人一項你會的技能','參與社群或陪伴型活動'],
  E:['主導一個小專案或提案','嘗試銷售或推廣一樣東西','設定並挑戰一個目標'],
  C:['建立一套整理或記錄系統','協助管理流程或資料','學一個提升效率的工具']};
-const ANCHOR_Q=[
- {t:'我希望在專業領域不斷精進、成為專家',a:'技術／職能型'},
- {t:'我希望往上管理、帶人並負成敗責任',a:'管理型'},
- {t:'我希望能自己決定怎麼工作、不被綁',a:'自主／獨立型'},
- {t:'我重視工作與收入的穩定與保障',a:'安全／穩定型'},
- {t:'我想創造屬於自己的東西或事業',a:'創業型'},
- {t:'我希望工作能幫助他人、對世界有貢獻',a:'服務／奉獻型'},
- {t:'我追求克服困難、解決別人解不了的問題',a:'純粹挑戰型'},
- {t:'我希望工作能配合我的生活與家庭',a:'生活型'}];
-const ANCHOR_VAL={'技術／職能型':['專業','品質','學習'],'管理型':['領導','影響力','權力'],
- '自主／獨立型':['自由','獨立','彈性'],'安全／穩定型':['穩定','平靜','和平'],
- '創業型':['創新','創造','冒險'],'服務／奉獻型':['利他','助人','意義'],
- '純粹挑戰型':['挑戰','競爭','目標'],'生活型':['平衡','家庭','健康']};
+/* ============ 職業價值觀測評（Career Anchor, 排序計分）============ */
+const ANC_TYPES=['技術功能型','管理能力型','自主獨立型','安全穩定型','企業創造型','服務型','挑戰型','生活型'];
+const ANC_VAL={'技術功能型':['專業','品質','學習'],'管理能力型':['領導','影響力','權力'],
+ '自主獨立型':['自由','獨立','彈性'],'安全穩定型':['穩定','平靜','和平'],
+ '企業創造型':['創新','創造','冒險'],'服務型':['利他','助人','意義'],
+ '挑戰型':['挑戰','競爭','目標'],'生活型':['平衡','家庭','健康']};
+const ANC_Q=[
+ {q:'工作型態：請依序點出你的前四名',o:[
+   '期待在職場上充分發揮某項專長，並不斷在專業技術面持續精進。',
+   '期待能成為單位或組織的管理者，負責統籌人、事、物等資源分配，致力達成組織目標。',
+   '期待在職場能有完全的自主性，不願意受到主管或公司的束縛跟干擾，渴望自己安排工作時程節奏。',
+   '期待從事穩定固定的工作，有明確的規定與要求，並提供穩定安全的保障，不喜歡環境及未來發展有太大變化。',
+   '期待能將創意轉換成創業基礎，以開創新事業為終生追求目標。',
+   '期待能從事符合社會公益的工作，自己的投入能對社會產生貢獻。',
+   '期待在職場上能不斷接受挑戰、超越挑戰，不喜歡太過單調、容易達成目標的工作。',
+   '期待能讓工作、家庭以及個人的發展達到平衡，工作是為了提升自己的生活品質。']},
+ {q:'薪酬方式：請依序點出你的前四名',o:[
+   '能根據其能力、專業甚至學識程度給予薪資或獎酬。',
+   '藉由自己的薪酬待遇來衡量自己的成就，期待可以獲得很高的薪酬。',
+   '根據績效成果獲得薪酬，具有可移動性的報酬。',
+   '穩定、可預期的薪酬收入，並獲得諸如保險、退休等充分的保障。',
+   '能分享創意所帶來的成果，期待可以獲得組織的所有權。',
+   '薪酬不是核心，看重企業對社會的貢獻與公平性；對理念忠誠更甚企業忠誠，在意薪酬是否符合自己內在價值或公益性。',
+   '提供更具挑戰性的工作任務有時勝過薪資報酬，並能根據自己的績效表現獲取薪酬。',
+   '錢夠用就好，生活品質更勝於單純的金錢收入。']},
+ {q:'發展機會：請依序點出你的前四名',o:[
+   '傾向在其專業職涯階梯發展，即使轉往管理也希望能繼續在專業領域精進。',
+   '是否有機會成為單位主管，並持續有晉升機會或薪酬上的提升。',
+   '是否能持續提升工作中的自主性；若有機會晉升，也不希望因此喪失工作自由，若不能兩全，寧可選自由。',
+   '期待根據年資深淺穩定升遷，職位沒有變動也無妨，只要收入可以穩步調整就好。',
+   '工作上能否有足夠的舞台讓其創意得以發揮，以及能否獲得未來開創自己事業的機會。',
+   '重視職場上的工作意義與存在價值，期待晉升到能提攜後進或協助他人完成工作的職位。',
+   '能否達成每次自己或公司設下的目標，並能繼續挑戰更高的目標並達成。',
+   '在乎生活的富足性，不在乎工作的發展是否符合社會的期待。']},
+ {q:'認同價值：請依序點出你的前四名',o:[
+   '能否在職場上累積專業技術與能力，成為人人、特別是同儕眼中的專家。',
+   '自己在組織裡的位階、職銜、薪酬、有多少部屬、掌管多少預算，藉此彰顯職涯成就和在組織中的重要性。',
+   '自己能以獨立、自主的方式完成工作並受到尊重，工作成果由自己定義，不被過度規範或干涉。',
+   '對組織的忠誠度、留任工作的穩定性等是否被視為一種對組織的貢獻。',
+   '能否開創出財富或具規模的組織，並成為大眾的注目焦點。',
+   '公益價值能否被了解與重視。',
+   '成為一位驍勇善戰的戰士、英雄人物。',
+   '致力追求工作、家庭及個人三方面的平衡，並能得到他人的認同。']}];
 
 /* ============ 狀態 ============ */
-const state={ step:'hub', test:null, disc:{ans:{},type:null,beh:{}}, hol:{ans:{},code:[],prop:{}},
-  anc:{ans:{},top:null}, intr:{list:[]}, done:{disc:false,hol:false,anc:false,intr:false} };
+const state={ step:'hub', disc:{ans:{},type:null,beh:{}}, hol:{ans:{},code:[],prop:{}},
+  anc:{q:0,picks:[[],[],[],[]],primary:null,secondary:null}, intr:{list:[],seeded:false},
+  done:{disc:false,hol:false,anc:false,intr:false} };
 const screen=document.getElementById('screen');
-function prog(){ const d=state.done; const n=[d.disc,d.hol,d.anc,d.intr].filter(Boolean).length; document.getElementById('progress').style.width=(n/4*100)+'%'; }
+function prog(){const d=state.done;document.getElementById('progress').style.width=([d.disc,d.hol,d.anc,d.intr].filter(Boolean).length/4*100)+'%';}
 function render(){screen.classList.remove('fade-in');void screen.offsetWidth;screen.classList.add('fade-in');prog();window.scrollTo({top:0,behavior:'smooth'});
-  const map={hub:renderHub,disc_q:discQ,disc_r:discR,hol_q:holQ,hol_r:holR,anc_q:ancQ,anc_r:ancR,intr:intrS};
-  map[state.step]();}
-function esc(s){return(s||'').replace(/"/g,'&quot;');}
+  ({hub:renderHub,disc_q:discQ,disc_r:discR,hol_q:holQ,hol_r:holR,anc_q:ancQ,anc_r:ancR,intr:intrS}[state.step])();}
+function finishTest(k){state.done[k]=true;state.step='hub';render();}
 
 /* ============ HUB ============ */
 function renderHub(){
   const d=state.done;
   const cards=[
-   {k:'disc',ic:'🧭',n:'DISC · 性格傾向',d:'測完列 10 種行為核對「這是我/不是我」',start:"state.step='disc_q';render()"},
-   {k:'hol',ic:'🎯',n:'Holland · 興趣方向',d:'測完給興趣提案：做過/想試試看/沒興趣',start:"state.step='hol_q';render()"},
-   {k:'anc',ic:'⚓',n:'Career Anchor · 職業價值觀',d:'測完把 3 個價值觀加入你的清單',start:"state.step='anc_q';render()"},
-   {k:'intr',ic:'🌱',n:'興趣盤點',d:'記錄持續中／曾中斷的興趣',start:"state.step='intr';render()"}];
+   {k:'disc',ic:'🧭',n:'人格特質測評',d:'20 題（職場/生活/人際）→ 列 10 行為核對',go:"state.step='disc_q';render()"},
+   {k:'hol',ic:'🎯',n:'興趣方向測評',d:'測完給興趣提案：做過/想試試看/沒興趣',go:"state.step='hol_q';render()"},
+   {k:'anc',ic:'⚓',n:'職業價值觀測評',d:'4 題排序 → 主要＋次要錨定 → 對應價值觀',go:"startAnc()"},
+   {k:'intr',ic:'🌱',n:'興趣盤點',d:'接興趣方向測評結果，標持續中/已中斷',go:"state.step='intr';render()"}];
   screen.innerHTML=`
     <div class="badge">S 軸 · 自我了解</div>
-    <h1>自我探索測驗中心</h1>
-    <p class="lead">四個小工具，補齊你的自我了解四維：<strong>性格 · 興趣 · 價值觀 · 興趣盤點</strong>。每個都「測完不是結束」，而是變成可累積的資料。</p>
-    ${cards.map(c=>`<div class="hubcard" onclick="${c.start}">
+    <h1>自我探索測評中心</h1>
+    <p class="lead">四個工具，補齊自我了解四維：<strong>性格 · 興趣 · 價值觀</strong>（＋專業梳理）。每個都「測完不是結束」，而是變成可累積、可行動的資料。</p>
+    ${cards.map(c=>`<div class="hubcard" onclick="${c.go}">
       <div class="ic">${c.ic}</div><div class="t"><div class="n">${c.n}</div><div class="d">${c.d}</div></div>
       <div class="st ${d[c.k]?'done':''}">${d[c.k]?'已完成 ✓':'開始'}</div></div>`).join('')}
-    <div class="box">💡 完成後資料會回補你的 <strong>S%（自我了解程度）</strong>；Career Anchor 的價值觀會流入決策骨架/價值觀排序。</div>`;
+    <div class="box">💡 完成回補 <strong>S%（自我了解）</strong>；職業價值觀測評的價值觀會流入決策骨架/價值觀排序。</div>`;
 }
 
-/* ============ DISC ============ */
-function discQ(){
-  const done=DISC_Q.every((_,i)=>state.disc.ans[i]);
-  screen.innerHTML=qHTML('DISC · 性格傾向','請依「像我的程度」評分（1 很不像 → 5 非常像）',DISC_Q,state.disc.ans,'setDisc',
-    done?"computeDisc()":'', done);
-}
+/* ============ 人格特質測評 ============ */
+function discQ(){const done=DISC_Q.every((_,i)=>state.disc.ans[i]);
+  const ansN=DISC_Q.filter((_,i)=>state.disc.ans[i]).length;
+  screen.innerHTML=`<div class="eyebrow">人格特質測評 · ${ansN}/20</div><h2>請依「像我的程度」評分（1 很不像 → 5 非常像）</h2>
+    ${DISC_Q.map((q,i)=>`<div class="q"><div class="qt"><span class="sc">${q.sc}</span>${i+1}. ${q.t}</div>
+      <div class="scale">${[1,2,3,4,5].map(v=>`<button class="${state.disc.ans[i]===v?'on':''}" onclick="setDisc(${i},${v})">${v}</button>`).join('')}</div>
+      <div class="scalelab"><span>很不像</span><span>非常像</span></div></div>`).join('')}
+    <div class="actions"><button class="btn btn-secondary" onclick="state.step='hub';render()">← 回中心</button>
+      <button class="btn btn-primary" ${done?'':'disabled'} onclick="computeDisc()">看結果 →</button></div>`;}
 function setDisc(i,v){state.disc.ans[i]=v;render();}
 function computeDisc(){const s={D:0,I:0,S:0,C:0};DISC_Q.forEach((q,i)=>s[q.d]+=(state.disc.ans[i]||0));
   state.disc.type=Object.entries(s).sort((a,b)=>b[1]-a[1])[0][0];state.step='disc_r';render();}
 function discR(){const info=DISC_INFO[state.disc.type];const beh=state.disc.beh;
   const cnt=Object.values(beh).filter(v=>v==='y').length;const answered=Object.keys(beh).length;
-  screen.innerHTML=`
-    <div class="eyebrow">DISC · 結果</div>
+  screen.innerHTML=`<div class="eyebrow">人格特質測評 · 結果</div>
     <div class="resbox"><div class="rt">${info.n}</div><div class="rd">下面 10 種「這型人常見的行為」，核對哪些是你。</div></div>
     ${info.beh.map((b,i)=>`<div class="item"><span class="nm">${b}</span>
-      <div class="seg"><button class="${beh[i]==='y'?'on-y':''}" onclick="setBeh(${i},'y')">這是我</button>
+      <div class="seg"><button class="${beh[i]==='y'?'on':''}" onclick="setBeh(${i},'y')">這是我</button>
       <button class="${beh[i]==='n'?'on-n':''}" onclick="setBeh(${i},'n')">這不是我</button></div></div>`).join('')}
     <div class="box">已核對 ${answered}/10，其中「這是我」${cnt} 項。核對一致度越高 → 性格維度越穩定（長期可重測核對）。</div>
     <div class="actions"><button class="btn btn-secondary" onclick="state.step='disc_q';render()">← 重測</button>
-      <button class="btn btn-primary" onclick="finishTest('disc')">完成，回中心 →</button></div>`;
-}
+      <button class="btn btn-primary" onclick="finishTest('disc')">完成，回中心 →</button></div>`;}
 function setBeh(i,v){state.disc.beh[i]=v;render();}
 
-/* ============ Holland ============ */
+/* ============ 興趣方向測評 ============ */
 function holQ(){const done=HOL_Q.every((_,i)=>state.hol.ans[i]);
-  screen.innerHTML=qHTML('Holland · 興趣方向','請依「我喜歡的程度」評分（1 → 5）',HOL_Q,state.hol.ans,'setHol',done?"computeHol()":'',done);}
+  screen.innerHTML=`<div class="eyebrow">興趣方向測評</div><h2>請依「我喜歡的程度」評分（1 → 5）</h2>
+    ${HOL_Q.map((q,i)=>`<div class="q"><div class="qt">${i+1}. ${q.t}</div>
+      <div class="scale">${[1,2,3,4,5].map(v=>`<button class="${state.hol.ans[i]===v?'on':''}" onclick="setHol(${i},${v})">${v}</button>`).join('')}</div>
+      <div class="scalelab"><span>很不喜歡</span><span>非常喜歡</span></div></div>`).join('')}
+    <div class="actions"><button class="btn btn-secondary" onclick="state.step='hub';render()">← 回中心</button>
+      <button class="btn btn-primary" ${done?'':'disabled'} onclick="computeHol()">看結果 →</button></div>`;}
 function setHol(i,v){state.hol.ans[i]=v;render();}
 function computeHol(){const s={R:0,I:0,A:0,S:0,E:0,C:0};HOL_Q.forEach((q,i)=>s[q.d]+=(state.hol.ans[i]||0));
   state.hol.code=Object.entries(s).sort((a,b)=>b[1]-a[1]).slice(0,3).map(e=>e[0]);state.step='hol_r';render();}
-function holR(){const code=state.hol.code;const props=[];code.forEach(l=>HOL_PROP[l].forEach(p=>props.push({l,p})));
-  screen.innerHTML=`
-    <div class="eyebrow">Holland · 結果</div>
+function holProps(){const props=[];state.hol.code.forEach(l=>HOL_PROP[l].forEach(p=>props.push(p)));return props;}
+function holR(){const code=state.hol.code;const props=holProps();
+  screen.innerHTML=`<div class="eyebrow">興趣方向測評 · 結果</div>
     <div class="resbox"><div class="rt">${code.join(' · ')}</div><div class="rd">你的興趣前三碼：${code.map(l=>HOL_NAME[l]).join('、')}</div></div>
     <p class="hint">針對你的興趣方向，這些提案你的態度是？</p>
-    ${props.map((o,i)=>`<div class="item"><span class="nm">${o.p}</span>
+    ${props.map((p,i)=>`<div class="item"><span class="nm">${p}</span>
       <div class="seg">
         <button class="${state.hol.prop[i]==='done'?'on':''}" onclick="setProp(${i},'done')">已做過</button>
         <button class="${state.hol.prop[i]==='try'?'on-m':''}" onclick="setProp(${i},'try')">想試試看</button>
         <button class="${state.hol.prop[i]==='no'?'on-n':''}" onclick="setProp(${i},'no')">沒興趣</button>
       </div></div>`).join('')}
-    <div class="box">「想試試看」可導入 <strong>探索A / 最小行動體驗</strong>；「已做過」累積進興趣盤點。</div>
+    <div class="box">「已做過」「想試試看」的項目，會被帶進<strong>興趣盤點</strong>；「想試試看」也可導入探索A／最小行動。</div>
     <div class="actions"><button class="btn btn-secondary" onclick="state.step='hol_q';render()">← 重測</button>
-      <button class="btn btn-primary" onclick="finishTest('hol')">完成，回中心 →</button></div>`;
-}
+      <button class="btn btn-primary" onclick="finishHol()">完成，回中心 →</button></div>`;}
 function setProp(i,v){state.hol.prop[i]=v;render();}
+function finishHol(){state.intr.seeded=false;finishTest('hol');} /* 重做測評後重新帶入興趣盤點 */
 
-/* ============ Career Anchor ============ */
-function ancQ(){const done=ANCHOR_Q.every((_,i)=>state.anc.ans[i]);
-  screen.innerHTML=qHTML('Career Anchor · 職業價值觀','請依「符合你的程度」評分（1 → 5）',ANCHOR_Q,state.anc.ans,'setAnc',done?"computeAnc()":'',done);}
-function setAnc(i,v){state.anc.ans[i]=v;render();}
-function computeAnc(){let best=-1,bi=0;ANCHOR_Q.forEach((q,i)=>{if((state.anc.ans[i]||0)>best){best=state.anc.ans[i];bi=i;}});
-  state.anc.top=ANCHOR_Q[bi].a;state.step='anc_r';render();}
-function ancR(){const a=state.anc.top;const vals=ANCHOR_VAL[a];
-  screen.innerHTML=`
-    <div class="eyebrow">Career Anchor · 結果</div>
-    <div class="resbox"><div class="rt">${a}</div><div class="rd">這個錨對應的 3 個價值觀：</div>
-      <div style="margin-top:10px;">${vals.map(v=>`<span class="vchip">${v}</span>`).join('')}</div></div>
-    <p>核對一下：你做價值觀排序時，有沒有選到這幾個？若有，代表內在錨定與顯意識一致。</p>
-    <div class="box">把這 3 個價值觀加入你的清單，之後做價值觀排序或決策骨架時會自動帶入。</div>
-    <div class="actions"><button class="btn btn-secondary" onclick="state.step='anc_q';render()">← 重測</button>
-      <button class="btn btn-primary" onclick="injectAnchor()">加入價值觀清單 → 完成</button></div>`;
-}
+/* ============ 職業價值觀測評（排序）============ */
+function startAnc(){state.anc={q:0,picks:[[],[],[],[]],primary:null,secondary:null};state.step='anc_q';render();}
+function ancQ(){const qi=state.anc.q;const Q=ANC_Q[qi];const picks=state.anc.picks[qi];const done=picks.length===4;
+  screen.innerHTML=`<div class="eyebrow">職業價值觀測評 · 第 ${qi+1}/4 題</div><h2>${Q.q}</h2>
+    <p class="hint">依序點選你最認同的前 4 項（第1名4分→第4名1分）。再點一下可取消。</p>
+    ${Q.o.map((o,i)=>{const r=picks.indexOf(i);return `<div class="rankopt ${r>=0?'sel':''}" onclick="pickAnc(${i})">
+      <div class="rk">${r>=0?r+1:''}</div><div class="ot">${o}</div></div>`;}).join('')}
+    <div class="actions"><button class="btn btn-secondary" onclick="${qi===0?"state.step='hub';render()":'prevAnc()'}">← ${qi===0?'回中心':'上一題'}</button>
+      <button class="btn btn-primary" ${done?'':'disabled'} onclick="nextAnc()">${qi===3?'看結果 →':'下一題 →'}</button></div>`;}
+function pickAnc(i){const picks=state.anc.picks[state.anc.q];const idx=picks.indexOf(i);
+  if(idx>=0)picks.splice(idx,1);else if(picks.length<4)picks.push(i);render();}
+function prevAnc(){state.anc.q--;render();}
+function nextAnc(){if(state.anc.q<3){state.anc.q++;render();}else computeAnc();}
+function computeAnc(){const sc={};ANC_TYPES.forEach(t=>sc[t]=0);
+  state.anc.picks.forEach(pl=>pl.forEach((optI,rank)=>{sc[ANC_TYPES[optI]]+=(4-rank);}));
+  const sorted=Object.entries(sc).sort((a,b)=>b[1]-a[1]);
+  state.anc.primary=sorted[0][0];state.anc.secondary=sorted[1][0];state.step='anc_r';render();}
+function ancR(){const p=state.anc.primary,s=state.anc.secondary;
+  screen.innerHTML=`<div class="eyebrow">職業價值觀測評 · 結果</div>
+    <div class="resbox"><div class="rd">主要錨定</div><div class="rt">${p}</div>
+      <div style="margin:8px 0 14px;">${ANC_VAL[p].map(v=>`<span class="vchip">${v}</span>`).join('')}</div>
+      <div class="rd">次要錨定</div><div class="rt" style="font-size:20px;">${s}</div>
+      <div style="margin-top:8px;">${ANC_VAL[s].map(v=>`<span class="vchip">${v}</span>`).join('')}</div></div>
+    <p>核對一下：你做價值觀排序時，有沒有選到這些？若有，代表內在錨定與顯意識一致。</p>
+    <div class="box">把主要＋次要錨定對應的價值觀加入你的清單，之後做價值觀排序或決策骨架會自動帶入。</div>
+    <div class="actions"><button class="btn btn-secondary" onclick="startAnc()">← 重測</button>
+      <button class="btn btn-primary" onclick="injectAnchor()">加入價值觀清單 → 完成</button></div>`;}
 function injectAnchor(){
-  const vals=ANCHOR_VAL[state.anc.top];
-  try{ const raw=localStorage.getItem('growme_value_items'); let arr=raw?JSON.parse(raw):[];
-    if(!Array.isArray(arr))arr=[];
-    vals.forEach(v=>{ if(!arr.find(o=>(o.name||o)===v)) arr.push({name:v,score:5,action:''}); });
-    localStorage.setItem('growme_value_items',JSON.stringify(arr));
-  }catch(e){}
-  finishTest('anc');
-}
+  const vals=[...new Set([...ANC_VAL[state.anc.primary],...ANC_VAL[state.anc.secondary]])];
+  try{const raw=localStorage.getItem('growme_value_items');let arr=raw?JSON.parse(raw):[];if(!Array.isArray(arr))arr=[];
+    vals.forEach(v=>{if(!arr.find(o=>(o.name||o)===v))arr.push({name:v,score:5,action:''});});
+    localStorage.setItem('growme_value_items',JSON.stringify(arr));}catch(e){}
+  finishTest('anc');}
 
-/* ============ 興趣盤點 ============ */
+/* ============ 興趣盤點（接興趣方向測評）============ */
 function intrS(){
-  screen.innerHTML=`
-    <div class="eyebrow">興趣盤點</div>
-    <h2>你的興趣，現在是哪種狀態？</h2>
-    <p class="hint">一行一個，標「持續中」或「曾中斷」。中斷的興趣往往藏著線索。</p>
-    ${state.intr.list.map((it,i)=>`<div class="item"><span class="nm">${it.name}</span>
+  if(!state.done.hol){
+    screen.innerHTML=`<div class="eyebrow">興趣盤點</div><h2>先完成「興趣方向測評」</h2>
+      <p class="lead">興趣盤點會把你在興趣方向測評中標為「已做過／想試試看」的項目帶進來，先去完成它吧。</p>
+      <div class="actions"><button class="btn btn-secondary" onclick="state.step='hub';render()">← 回中心</button>
+        <button class="btn btn-primary" onclick="state.step='hol_q';render()">去做興趣方向測評 →</button></div>`;
+    return;
+  }
+  if(!state.intr.seeded){
+    const props=holProps();const seeded=[];
+    props.forEach((p,i)=>{const a=state.hol.prop[i];if(a==='done'||a==='try')seeded.push({name:p,origin:a,st:null});});
+    state.intr.list=seeded;state.intr.seeded=true;
+  }
+  screen.innerHTML=`<div class="eyebrow">興趣盤點</div><h2>這些興趣，現在是哪種狀態？</h2>
+    <p class="hint">已從興趣方向測評帶入。標「持續中／已中斷」，不相關可移除；也可自行新增。</p>
+    ${state.intr.list.length?state.intr.list.map((it,i)=>`<div class="item">
+      <span class="nm">${it.name}${it.origin?`<span class="otag">${it.origin==='done'?'已做過':'想試試看'}</span>`:''}</span>
       <div class="seg"><button class="${it.st==='on'?'on':''}" onclick="setIntr(${i},'on')">持續中</button>
-        <button class="${it.st==='off'?'on-m':''}" onclick="setIntr(${i},'off')">曾中斷</button>
-        <button class="" onclick="rmIntr(${i})" style="color:var(--muted)">移除</button></div></div>`).join('')}
-    <div class="addrow"><input class="txt" id="ni" placeholder="例：攝影、跑步、寫作…"><button class="btn btn-primary btn-sm" onclick="addIntr()">新增</button></div>
+        <button class="${it.st==='off'?'on-m':''}" onclick="setIntr(${i},'off')">已中斷</button>
+        <button onclick="rmIntr(${i})" style="color:var(--muted)">移除</button></div></div>`).join('')
+      :`<p class="hint">（測評中沒有標記「已做過/想試試看」的項目，可在下方自行新增。）</p>`}
+    <div class="addrow"><input class="txt" id="ni" placeholder="自行新增興趣，例：攝影…"><button class="btn btn-primary btn-sm" onclick="addIntr()">新增</button></div>
     <div class="actions"><button class="btn btn-secondary" onclick="state.step='hub';render()">← 回中心</button>
       <button class="btn btn-primary" ${state.intr.list.length?'':'disabled'} onclick="finishTest('intr')">完成 →</button></div>`;
 }
-function addIntr(){const el=document.getElementById('ni');const v=el.value.trim();if(!v)return;state.intr.list.push({name:v,st:'on'});render();}
 function setIntr(i,s){state.intr.list[i].st=s;render();}
 function rmIntr(i){state.intr.list.splice(i,1);render();}
-
-/* ============ 共用 ============ */
-function qHTML(title,sub,arr,ans,setter,nextCall,done){
-  return `<div class="eyebrow">${title}</div><h2>${sub}</h2>
-    ${arr.map((q,i)=>`<div class="q"><div class="qt">${i+1}. ${q.t}</div>
-      <div class="scale">${[1,2,3,4,5].map(v=>`<button class="${ans[i]===v?'on':''}" onclick="${setter}(${i},${v})">${v}</button>`).join('')}</div>
-      <div class="scalelab"><span>很不像</span><span>非常像</span></div></div>`).join('')}
-    <div class="actions"><button class="btn btn-secondary" onclick="state.step='hub';render()">← 回中心</button>
-      <button class="btn btn-primary" ${done?'':'disabled'} onclick="${nextCall||''}">看結果 →</button></div>`;
-}
-function finishTest(k){state.done[k]=true;state.step='hub';render();}
+function addIntr(){const el=document.getElementById('ni');const v=el.value.trim();if(!v)return;state.intr.list.push({name:v,origin:null,st:'on'});render();}
 render();
 </script>
 </body>
